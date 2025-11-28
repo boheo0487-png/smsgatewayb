@@ -1,0 +1,5 @@
+{
+  "name": "SMS Gateway SaaS-b方案",
+  "description": "A modern, clean SaaS dashboard for managing SMS gateway devices, featuring real-time statistics, device health monitoring, and message logs.",
+  "requestFramePermissions": []
+}
