@@ -82,12 +82,17 @@ const HorizontalInput: React.FC<{ label: string; value: string; placeholder?: st
   </div>
 );
 
-const HorizontalSelect: React.FC<{ label: string; value: string; options: string[] }> = ({ label, value, options }) => (
+const HorizontalSelect: React.FC<{ label: string; value?: string; options: string[]; onChange?: (e: React.ChangeEvent<HTMLSelectElement>) => void }> = ({ label, value, options, onChange }) => (
   <div className="grid grid-cols-[100px_1fr] items-center gap-4">
     <label className="text-sm font-medium text-slate-600 text-right">{label}</label>
     <div className="relative w-full">
-      <select defaultValue={value} className="w-full appearance-none px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all shadow-sm">
-        {options.map(opt => <option key={opt}>{opt}</option>)}
+      <select 
+        value={value} 
+        onChange={onChange}
+        defaultValue={onChange ? undefined : value}
+        className="w-full appearance-none px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-800 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 transition-all shadow-sm"
+      >
+        {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
       </select>
       <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
     </div>
@@ -108,11 +113,23 @@ const HorizontalTextarea: React.FC<{ label: string; placeholder?: string; helpTe
   </div>
 );
 
+const HorizontalToggle: React.FC<{ label: string; checked?: boolean; defaultChecked?: boolean }> = ({ label, checked, defaultChecked }) => {
+    const [isChecked, setIsChecked] = React.useState(defaultChecked || false);
+    const val = checked !== undefined ? checked : isChecked;
+    
+    return (
+        <div className="grid grid-cols-[100px_1fr] items-center gap-4">
+            <label className="text-sm font-medium text-slate-600 text-right">{label}</label>
+            <Toggle checked={val} onChange={() => setIsChecked(!val)} />
+        </div>
+    );
+}
+
 const GatewaySettings: React.FC = () => {
   const [vpnProtocol, setVpnProtocol] = useState('禁用');
-  const [notifyEmail, setNotifyEmail] = useState(true);
-  const [notifySms, setNotifySms] = useState(false);
+  const [notifyEnabled, setNotifyEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [mgmtType, setMgmtType] = useState('禁用');
   
   // Advanced Settings State
   const [ntpSync, setNtpSync] = useState(false);
@@ -343,38 +360,58 @@ const GatewaySettings: React.FC = () => {
                 </FormGroup>
 
                 <FormGroup title="通知设置">
-                    <div className="space-y-3">
-                        <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200">
-                            <div className="flex items-center gap-3">
-                                <div className={`p-1.5 rounded-md ${notifyEmail ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-100 text-slate-400'}`}>
-                                    <Bell className="w-4 h-4" />
-                                </div>
-                                <span className="text-sm font-medium text-slate-700">邮件告警通知</span>
-                            </div>
-                            <Toggle checked={notifyEmail} onChange={() => setNotifyEmail(!notifyEmail)} />
-                        </div>
-                        <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200">
-                            <div className="flex items-center gap-3">
-                                <div className={`p-1.5 rounded-md ${notifySms ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
-                                    <MessageSquare className="w-4 h-4" />
-                                </div>
-                                <span className="text-sm font-medium text-slate-700">短信转发通知</span>
-                            </div>
-                            <Toggle checked={notifySms} onChange={() => setNotifySms(!notifySms)} />
+                    <div className="grid grid-cols-[100px_1fr] items-center gap-4">
+                        <label className="text-sm font-medium text-slate-600 text-right">启用</label>
+                        <div>
+                             <Toggle 
+                                checked={notifyEnabled} 
+                                onChange={() => setNotifyEnabled(!notifyEnabled)} 
+                             />
                         </div>
                     </div>
+
+                    {notifyEnabled && (
+                        <div className="space-y-4 animate-in fade-in slide-in-from-top-1 pt-2">
+                             <HorizontalInput label="URL" value="http://192.168.0.105:23333/post_sms" />
+                             <HorizontalInput label="间隔时间(秒)" value="10" />
+                             
+                             <HorizontalToggle label="上报接收的彩信" />
+                             <HorizontalToggle label="上报接收的短信" defaultChecked={true} />
+                             <HorizontalToggle label="上报发送的短信" defaultChecked={true} />
+                             <HorizontalToggle label="上报短信控制数据" />
+                             <HorizontalToggle label="上报流量控制数据" />
+                        </div>
+                    )}
                 </FormGroup>
 
-                <FormGroup title="设备网管 (TR-069)">
-                        <InputField label="ACS URL" value="http://acs.example.com/cpe" />
-                        <div className="grid grid-cols-2 gap-4">
-                        <InputField label="ACS 用户名" value="cpe" />
-                        <InputField label="ACS 密码" value="******" type="password" />
+                <FormGroup title="设备网管">
+                    <p className="text-sm text-slate-500 mb-4 px-1">启用并注册网管服务器后，可通过服务器访问此设备的Web界面</p>
+                    
+                    <HorizontalSelect 
+                        label="网管类型" 
+                        value={mgmtType} 
+                        options={['禁用', '远程网管']} 
+                        onChange={(e) => setMgmtType(e.target.value)}
+                    />
+
+                    {mgmtType === '远程网管' && (
+                        <div className="space-y-4 animate-in fade-in slide-in-from-top-1 pt-2">
+                            <HorizontalInput label="网管地址" value="t6.xinhaicapital.com" />
+                            <HorizontalInput label="网管端口" value="1883" />
+                            <HorizontalInput label="账号" value="root" />
+                            <HorizontalInput label="密码" value="root" type="password" />
+                            
+                            <div className="grid grid-cols-[100px_1fr] items-center gap-4">
+                                <label className="text-sm font-medium text-slate-600 text-right">状态</label>
+                                <div>
+                                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500 text-white shadow-sm border border-emerald-400">
+                                        <LinkIcon className="w-3.5 h-3.5" strokeWidth={2.5} />
+                                        已连接
+                                    </span>
+                                </div>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2 mt-2">
-                            <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                            <span className="text-xs text-slate-500">上次心跳: 2 分钟前</span>
-                        </div>
+                    )}
                 </FormGroup>
             </div>
         </div>
