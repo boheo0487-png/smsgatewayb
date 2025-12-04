@@ -36,7 +36,7 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, change, icon: Icon, t
              {trend === 'neutral' && <Minus className="w-3.5 h-3.5" />}
              {Math.abs(change)}%
           </div>
-          <span className="ml-2 text-slate-400">vs yesterday</span>
+          <span className="ml-2 text-slate-400">较昨日</span>
         </div>
       )}
     </div>

@@ -9,8 +9,18 @@ import {
   ChevronDown,
   AlertCircle,
   CheckCircle2,
-  Trash2
+  MessageSquare
 } from './Icons';
+
+interface SmsStats {
+  received: number;
+  sent: number;
+  successRate: number;
+  sending: number;
+  sentSuccess: number;
+  sentFailed: number;
+  consecFailed: number;
+}
 
 interface PortData {
   id: string;
@@ -20,6 +30,7 @@ interface PortData {
   originalImei: string;
   currentImei: string;
   status: 'enabled' | 'offline' | 'disabled';
+  smsStats: SmsStats;
 }
 
 const mockPorts: PortData[] = [
@@ -31,6 +42,15 @@ const mockPorts: PortData[] = [
     originalImei: '174955476637371',
     currentImei: '174955476637371',
     status: 'enabled',
+    smsStats: {
+        received: 124,
+        sent: 1540,
+        successRate: 99.8,
+        sending: 12,
+        sentSuccess: 1538,
+        sentFailed: 2,
+        consecFailed: 0
+    }
   },
   {
     id: '2',
@@ -40,6 +60,15 @@ const mockPorts: PortData[] = [
     originalImei: '174955476637372',
     currentImei: '174955476637372',
     status: 'enabled',
+    smsStats: {
+        received: 89,
+        sent: 892,
+        successRate: 98.6,
+        sending: 0,
+        sentSuccess: 880,
+        sentFailed: 12,
+        consecFailed: 0
+    }
   },
   {
     id: '3',
@@ -49,6 +78,15 @@ const mockPorts: PortData[] = [
     originalImei: '174955476637373',
     currentImei: '174955476637373',
     status: 'offline',
+    smsStats: {
+        received: 0,
+        sent: 0,
+        successRate: 0,
+        sending: 0,
+        sentSuccess: 0,
+        sentFailed: 0,
+        consecFailed: 0
+    }
   },
   {
     id: '4',
@@ -58,6 +96,15 @@ const mockPorts: PortData[] = [
     originalImei: '174955476637374',
     currentImei: '174955476637374',
     status: 'enabled',
+    smsStats: {
+        received: 45,
+        sent: 320,
+        successRate: 99.3,
+        sending: 5,
+        sentSuccess: 318,
+        sentFailed: 2,
+        consecFailed: 0
+    }
   },
    {
     id: '5',
@@ -67,6 +114,15 @@ const mockPorts: PortData[] = [
     originalImei: '174955476637375',
     currentImei: '174955476637375',
     status: 'disabled',
+    smsStats: {
+        received: 256,
+        sent: 2301,
+        successRate: 91.2,
+        sending: 45,
+        sentSuccess: 2100,
+        sentFailed: 201,
+        consecFailed: 5
+    }
   },
 ];
 
@@ -82,6 +138,18 @@ const PortStatus: React.FC = () => {
       volte: '自动',
       rebootSave: false
   });
+
+  // Calculate Aggregated Stats
+  const totalStats = ports.reduce((acc, port) => ({
+      received: acc.received + port.smsStats.received,
+      sent: acc.sent + port.smsStats.sent,
+      sending: acc.sending + port.smsStats.sending,
+      sentSuccess: acc.sentSuccess + port.smsStats.sentSuccess,
+      sentFailed: acc.sentFailed + port.smsStats.sentFailed,
+      consecFailed: acc.consecFailed + port.smsStats.consecFailed
+  }), { received: 0, sent: 0, sending: 0, sentSuccess: 0, sentFailed: 0, consecFailed: 0 });
+
+  const totalSuccessRate = totalStats.sent > 0 ? (totalStats.sentSuccess / totalStats.sent) * 100 : 0;
 
   const toggleSelectAll = () => {
     if (selectedIds.length === ports.length) {
@@ -142,23 +210,61 @@ const PortStatus: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold text-slate-800 tracking-tight">端口状态</h1>
-              <p className="text-sm text-slate-500 font-medium">管理蜂窝端口配置与实时状态</p>
+              <div className="flex items-center gap-4 mt-1">
+                  <p className="text-sm text-slate-500 font-medium">管理蜂窝端口配置与实时状态</p>
+                  <div className="hidden sm:block h-4 w-px bg-slate-300"></div>
+                  
+                  {/* Aggregated SMS Stats Badge with Tooltip */}
+                  <div className="relative group cursor-help z-20">
+                      <div className="flex items-center gap-2 px-3 py-1 bg-white border border-slate-200 rounded-lg shadow-sm hover:border-primary-300 transition-colors">
+                          <MessageSquare className="w-3.5 h-3.5 text-primary-500" />
+                          <span className="text-xs text-slate-500 font-medium">短信总数</span>
+                          <span className="text-sm font-bold text-slate-800 font-mono">{totalStats.sent.toLocaleString()}</span>
+                      </div>
+
+                      {/* Tooltip */}
+                      <div className="absolute left-0 top-full mt-2 w-64 p-4 bg-slate-900/95 backdrop-blur-md rounded-xl shadow-xl border border-white/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-y-2 group-hover:translate-y-0">
+                           <div className="space-y-3">
+                                <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                                    <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                                        <MessageSquare className="w-3 h-3 text-slate-400" />
+                                        全网短信统计
+                                    </span>
+                                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${totalSuccessRate >= 90 ? 'bg-emerald-500/20 text-emerald-400' : totalSuccessRate >= 50 ? 'bg-amber-500/20 text-amber-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                                        成功率 {totalSuccessRate.toFixed(1)}%
+                                    </span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px]">
+                                    <div className="flex justify-between"><span className="text-slate-400">接收:</span><span className="font-mono text-white">{totalStats.received}</span></div>
+                                    <div className="flex justify-between"><span className="text-slate-400">发送:</span><span className="font-mono text-white">{totalStats.sent}</span></div>
+                                    <div className="flex justify-between"><span className="text-slate-400">正在发送:</span><span className="font-mono text-blue-400">{totalStats.sending}</span></div>
+                                    <div className="flex justify-between"><span className="text-slate-400">发送成功:</span><span className="font-mono text-emerald-400">{totalStats.sentSuccess}</span></div>
+                                    <div className="flex justify-between"><span className="text-slate-400">发送失败:</span><span className="font-mono text-rose-400">{totalStats.sentFailed}</span></div>
+                                    <div className="flex justify-between col-span-2 border-t border-white/10 pt-2 mt-1">
+                                        <span className="text-slate-400">连续发送失败:</span>
+                                        <span className={`font-mono font-bold ${totalStats.consecFailed > 0 ? 'text-rose-500' : 'text-slate-500'}`}>{totalStats.consecFailed}</span>
+                                    </div>
+                                </div>
+                           </div>
+                      </div>
+                  </div>
+              </div>
             </div>
             
             <button 
                 onClick={() => setIsSettingsOpen(true)}
-                className="flex items-center gap-2 px-5 py-2 bg-white text-slate-700 text-sm font-semibold rounded-xl border border-slate-200 hover:border-primary-200 hover:text-primary-600 hover:shadow-md transition-all group"
+                className="flex items-center gap-2 px-5 py-2.5 bg-white text-slate-700 text-sm font-semibold rounded-xl border border-slate-200 hover:border-primary-200 hover:text-primary-600 hover:shadow-md transition-all group"
             >
-                <Settings className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform duration-500" />
+                <Settings className="w-4 h-4 group-hover:rotate-90 transition-transform duration-500" />
                 常规设置
             </button>
           </div>
       </div>
 
-      {/* Main Table - Optimized for clarity */}
-      <div className="flex-1 min-h-0 glass-card rounded-2xl border border-white/80 shadow-soft flex flex-col relative overflow-hidden bg-white/50">
+      {/* Main Table */}
+      <div className="flex-1 min-h-0 glass-card rounded-2xl border border-white/60 shadow-soft flex flex-col relative overflow-hidden bg-white/60">
         {/* Sticky Header */}
-        <div className="flex-none bg-slate-50/95 backdrop-blur-md border-b border-slate-200 z-10">
+        <div className="flex-none bg-slate-50/90 backdrop-blur-md border-b border-slate-200 z-10">
           <div className="flex items-center w-full px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest font-sans">
                 <div className="w-14 text-center">
                     <input 
@@ -171,9 +277,8 @@ const PortStatus: React.FC = () => {
                 <div className="flex-1 grid grid-cols-12 gap-4">
                     <div className="col-span-3">端口标识</div>
                     <div className="col-span-3">硬件信息</div>
-                    <div className="col-span-3">IMEI 配置</div>
-                    <div className="col-span-2">状态</div>
-                    <div className="col-span-1 text-right">操作</div>
+                    <div className="col-span-4">IMEI 配置</div>
+                    <div className="col-span-2 text-right">操作</div>
                 </div>
           </div>
         </div>
@@ -184,7 +289,7 @@ const PortStatus: React.FC = () => {
             {ports.map((port) => {
             const isSelected = selectedIds.includes(port.id);
             return (
-                <div key={port.id} className={`group flex items-center px-6 py-4 transition-all duration-200 hover:-translate-y-[1px] ${isSelected ? 'bg-indigo-50/60' : 'hover:bg-white/80 hover:shadow-sm'}`}>
+                <div key={port.id} className={`group flex items-center px-6 py-4 transition-all duration-200 border-l-2 ${isSelected ? 'bg-indigo-50/60 border-l-indigo-500' : 'border-l-transparent hover:bg-white/60 hover:border-l-slate-300'}`}>
                     {/* Checkbox */}
                     <div className="w-14 text-center flex-none">
                         <input type="checkbox" checked={isSelected} onChange={() => toggleSelectOne(port.id)} className="w-5 h-5 rounded-md border-slate-300 text-primary-600 focus:ring-primary-500 cursor-pointer" />
@@ -193,9 +298,9 @@ const PortStatus: React.FC = () => {
                     {/* Content Grid */}
                     <div className="flex-1 grid grid-cols-12 gap-4 items-center">
                         {/* Port Details */}
-                        <div className="col-span-3 flex items-center gap-4">
+                        <div className="col-span-3 flex items-center gap-3">
                             <div className={`w-9 h-9 rounded-lg flex items-center justify-center border transition-all shadow-sm ${
-                                port.status === 'enabled' ? 'bg-gradient-to-br from-emerald-50 to-emerald-100/50 border-emerald-100 text-emerald-600' : 
+                                port.status === 'enabled' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 
                                 port.status === 'offline' ? 'bg-slate-50 border-slate-200 text-slate-400' :
                                 'bg-amber-50 border-amber-100 text-amber-600'
                             }`}>
@@ -203,9 +308,20 @@ const PortStatus: React.FC = () => {
                             </div>
                             <div>
                                 <div className="font-bold text-slate-800 text-sm tracking-tight">{port.portName}</div>
-                                <div className="flex items-center gap-1.5 mt-0.5">
-                                    <span className={`w-1.5 h-1.5 rounded-full ${port.status === 'enabled' ? 'bg-emerald-400' : 'bg-slate-300'}`}></span>
-                                    <span className="text-xs text-slate-500 font-mono">{port.terminal}</span>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                    <span className="text-[10px] text-slate-500 font-mono bg-slate-100 px-1 rounded">{port.terminal}</span>
+                                     <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide w-fit ${
+                                         port.status === 'enabled' ? 'bg-emerald-50 text-emerald-600' : 
+                                         port.status === 'offline' ? 'bg-slate-100 text-slate-500' :
+                                         'bg-amber-50 text-amber-600'
+                                     }`}>
+                                         <span className={`w-1 h-1 rounded-full ${
+                                            port.status === 'enabled' ? 'bg-emerald-500' : 
+                                            port.status === 'offline' ? 'bg-slate-400' : 
+                                            'bg-amber-500'
+                                         }`}></span>
+                                         {port.status === 'enabled' ? '已启用' : port.status === 'offline' ? '离线' : '禁用'}
+                                     </div>
                                 </div>
                             </div>
                         </div>
@@ -213,63 +329,41 @@ const PortStatus: React.FC = () => {
                         {/* Hardware */}
                         <div className="col-span-3">
                             <div className="flex flex-col gap-0.5">
-                                <span className="text-xs font-bold text-slate-700 font-mono">{port.model}</span>
-                                <span className="text-[10px] text-slate-400 font-medium bg-slate-100 w-fit px-1.5 rounded">MOD V2.0</span>
+                                <span className="text-xs font-bold text-slate-700 font-mono truncate" title={port.model}>{port.model}</span>
+                                <span className="text-[10px] text-slate-400 font-medium bg-slate-100 border border-slate-200 w-fit px-1.5 rounded">V2.0</span>
                             </div>
                         </div>
 
                         {/* IMEI */}
-                        <div className="col-span-3">
+                        <div className="col-span-4">
                             <div className="space-y-0.5">
                                 <div className="flex items-center gap-2">
                                     <span className="text-xs font-mono font-bold text-slate-700">{port.currentImei}</span>
-                                    <span className="text-[10px] uppercase tracking-wide text-indigo-600 font-bold bg-indigo-50 px-1.5 py-px rounded border border-indigo-100">Current</span>
+                                    <span className="text-[10px] uppercase tracking-wide text-indigo-600 font-bold bg-indigo-50 px-1.5 py-px rounded border border-indigo-100">当前</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <span className="text-[10px] font-mono text-slate-400">{port.originalImei}</span>
-                                    <span className="text-[10px] uppercase tracking-wide text-slate-400 font-bold">Orig</span>
+                                    <span className="text-[10px] uppercase tracking-wide text-slate-400 font-bold">原始</span>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Status */}
-                        <div className="col-span-2">
-                            {port.status === 'enabled' ? (
-                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide border bg-emerald-50 text-emerald-700 border-emerald-100 shadow-sm">
-                                <CheckCircle2 className="w-3 h-3" />
-                                Active
-                            </div>
-                            ) : port.status === 'offline' ? (
-                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide border bg-slate-100 text-slate-500 border-slate-200">
-                                <Power className="w-3 h-3" />
-                                Offline
-                            </div>
-                            ) : (
-                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide border bg-amber-50 text-amber-700 border-amber-100">
-                                <AlertCircle className="w-3 h-3" />
-                                Disabled
-                            </div>
-                            )}
-                        </div>
-
-                        {/* Actions - Always Visible for Clarity */}
-                        <div className="col-span-1 text-right">
-                            <div className="flex items-center justify-end gap-1">
-                                <button 
-                                    onClick={() => handleAction(port.id, 'toggle')} 
-                                    className={`p-1.5 rounded-lg transition-all border border-transparent hover:border-slate-200 ${port.status === 'enabled' ? 'text-amber-500 hover:bg-amber-50' : 'text-emerald-600 hover:bg-emerald-50'}`}
-                                    title={port.status === 'enabled' ? 'Disable' : 'Enable'}
-                                >
+                        {/* Actions */}
+                        <div className="col-span-2 flex justify-end gap-2">
+                             <button onClick={() => handleAction(port.id, 'toggle')} className={`p-1.5 rounded-lg border transition-all ${port.status === 'enabled' ? 'border-emerald-200 text-emerald-600 hover:bg-emerald-50' : 'border-slate-200 text-slate-400 hover:bg-slate-50'}`} title={port.status === 'enabled' ? '禁用' : '启用'}>
+                                {loadingAction === `${port.id}-toggle` ? (
+                                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                ) : (
+                                    <Play className="w-3.5 h-3.5" />
+                                )}
+                             </button>
+                             <button onClick={() => handleAction(port.id, 'offline')} className="p-1.5 rounded-lg border border-slate-200 text-slate-400 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 transition-all" title="下线">
+                                {loadingAction === `${port.id}-offline` ? (
+                                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                ) : (
                                     <Power className="w-3.5 h-3.5" />
-                                </button>
-                                <button 
-                                    title="Reboot" 
-                                    onClick={() => handleAction(port.id, 'reboot')} 
-                                    className="p-1.5 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all border border-transparent hover:border-primary-100"
-                                >
-                                    <RefreshCw className={`w-3.5 h-3.5 ${loadingAction === `${port.id}-reboot` ? 'animate-spin text-primary-600' : ''}`} />
-                                </button>
-                            </div>
+                                )}
+                             </button>
                         </div>
                     </div>
                 </div>
@@ -278,148 +372,98 @@ const PortStatus: React.FC = () => {
           </div>
         </div>
         
-        {/* Footer Summary */}
-        <div className="flex-none px-6 py-3 bg-white/60 border-t border-slate-100 text-xs text-slate-500 font-medium flex justify-between items-center backdrop-blur-md">
-            <span>总计 {ports.length} 个端口</span>
-            <div className="flex gap-4">
-                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"></span> 在线: {ports.filter(p => p.status === 'enabled').length}</span>
-                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-slate-400"></span> 离线: {ports.filter(p => p.status === 'offline').length}</span>
-            </div>
+        {/* Floating Bulk Actions Bar */}
+        <div className={`absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-slate-800/90 backdrop-blur-xl text-white pl-4 pr-2 py-2 rounded-2xl shadow-float border border-white/10 transition-all duration-300 z-30 ${selectedIds.length > 0 ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0 pointer-events-none'}`}>
+             <div className="flex items-center gap-3 mr-4 border-r border-white/10 pr-4">
+                 <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary-500 text-[10px] font-bold">{selectedIds.length}</span>
+                 <span className="text-xs font-medium">个端口已选择</span>
+             </div>
+             
+             <div className="flex items-center gap-1">
+                 <button onClick={() => handleBulkAction('reboot')} className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors text-xs font-bold text-indigo-300">
+                     <RefreshCw className="w-3.5 h-3.5" />
+                     重启
+                 </button>
+                 <button onClick={() => handleBulkAction('enable')} className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors text-xs font-bold text-emerald-300">
+                     <Play className="w-3.5 h-3.5" />
+                     启用
+                 </button>
+                 <button onClick={() => handleBulkAction('offline')} className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors text-xs font-bold text-rose-300">
+                     <Power className="w-3.5 h-3.5" />
+                     下线
+                 </button>
+                  <button onClick={() => setSelectedIds([])} className="p-1.5 hover:bg-white/10 rounded-lg ml-1 text-slate-400 hover:text-white transition-colors">
+                     <X className="w-4 h-4" />
+                 </button>
+             </div>
         </div>
-      </div>
 
-      {/* Floating Bulk Action Bar - Usability Improvement */}
-      {selectedIds.length > 0 && (
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-slate-900/90 backdrop-blur-md text-white px-2 py-2 rounded-2xl shadow-2xl animate-enter z-20 border border-slate-700/50">
-            <span className="text-xs font-bold px-3 border-r border-slate-700/50">{selectedIds.length} 已选择</span>
-            
-            <div className="flex gap-1 pl-1">
-                <button 
-                    onClick={() => handleBulkAction('enable')} 
-                    className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-emerald-600/30 text-emerald-400 hover:text-emerald-300 transition-colors group"
-                >
-                    <Play className="w-4 h-4" />
-                    <span className="text-[10px] font-bold">启用</span>
-                </button>
-                <button 
-                    onClick={() => handleBulkAction('disable')} 
-                    className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-amber-600/30 text-amber-400 hover:text-amber-300 transition-colors group"
-                >
-                    <AlertCircle className="w-4 h-4" />
-                    <span className="text-[10px] font-bold">禁用</span>
-                </button>
-                <button 
-                    onClick={() => handleBulkAction('reboot')} 
-                    className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-primary-600/30 text-primary-400 hover:text-primary-300 transition-colors group"
-                >
-                    <RefreshCw className={`w-4 h-4 ${loadingAction === 'bulk-reboot' ? 'animate-spin' : ''}`} />
-                    <span className="text-[10px] font-bold">重启</span>
-                </button>
-                <div className="w-px bg-slate-700 mx-1"></div>
-                <button 
-                    onClick={() => handleBulkAction('offline')} 
-                    className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl hover:bg-rose-600/30 text-rose-400 hover:text-rose-300 transition-colors group"
-                >
-                    <Power className="w-4 h-4" />
-                    <span className="text-[10px] font-bold">下线</span>
-                </button>
-            </div>
-            
-            <button onClick={() => setSelectedIds([])} className="ml-2 p-1.5 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors">
-                <X className="w-4 h-4" />
-            </button>
-        </div>
-      )}
-
-       {/* Settings Modal - Better Layout */}
-       {isSettingsOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/20 backdrop-blur-md animate-enter">
-          <div className="bg-white/95 backdrop-blur-xl w-full max-w-lg overflow-hidden ring-1 ring-black/5 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.1)]">
-            <div className="px-8 py-5 border-b border-slate-100 flex items-center justify-between">
-               <div>
-                   <h3 className="text-lg font-bold text-slate-800">常规设置</h3>
-                   <p className="text-xs text-slate-500 mt-0.5">配置全局端口默认行为</p>
-               </div>
-               <button onClick={() => setIsSettingsOpen(false)} className="text-slate-400 hover:text-slate-700 transition-colors p-2 rounded-full hover:bg-slate-100"><X className="w-5 h-5" /></button>
-            </div>
-            
-            <div className="p-8 space-y-8">
-                {/* Group 1: Network */}
-                <div className="space-y-4">
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">网络配置</h4>
-                    <div className="grid grid-cols-2 gap-4">
-                        {[
-                        { label: '网络类型', key: 'networkType', options: ['自动', '4G Only', '3G Only'] },
-                        { label: '注册类型', key: 'regType', options: ['数据网络', '语音网络', '短信网络'] },
-                        ].map((field) => (
-                        <div key={field.key} className="space-y-1.5">
-                            <label className="text-xs font-semibold text-slate-600">{field.label}</label>
-                            <div className="relative">
-                                <select 
-                                    className="w-full appearance-none bg-slate-50 border border-slate-200 hover:border-primary-300 text-slate-700 text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm cursor-pointer font-medium"
-                                    value={(settings as any)[field.key]}
-                                    onChange={(e) => setSettings({...settings, [field.key]: e.target.value})}
-                                >
-                                    {field.options.map(opt => <option key={opt}>{opt}</option>)}
-                                </select>
-                                <ChevronDown className="absolute right-3 top-3 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+        {/* Settings Modal */}
+        {isSettingsOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm" onClick={() => setIsSettingsOpen(false)}></div>
+                <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md border border-white/60 animate-enter">
+                    <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 rounded-t-2xl">
+                        <h3 className="font-bold text-slate-800">常规设置</h3>
+                        <button onClick={() => setIsSettingsOpen(false)} className="p-1 rounded-lg hover:bg-slate-200/50 text-slate-400 hover:text-slate-600 transition-colors">
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
+                    <div className="p-6 space-y-5">
+                         <div className="space-y-4">
+                            <div className="grid grid-cols-3 items-center gap-4">
+                                <label className="text-sm font-medium text-slate-600 text-right">网络类型</label>
+                                <div className="col-span-2 relative">
+                                    <select className="w-full appearance-none pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-shadow">
+                                        <option>自动</option>
+                                        <option>4G Only</option>
+                                        <option>3G Only</option>
+                                    </select>
+                                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                                </div>
                             </div>
-                        </div>
-                        ))}
+                            <div className="grid grid-cols-3 items-center gap-4">
+                                <label className="text-sm font-medium text-slate-600 text-right">注册类型</label>
+                                <div className="col-span-2 relative">
+                                    <select className="w-full appearance-none pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-shadow">
+                                        <option>数据网络</option>
+                                        <option>语音网络</option>
+                                    </select>
+                                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-3 items-center gap-4">
+                                <label className="text-sm font-medium text-slate-600 text-right">VOLTE配置</label>
+                                <div className="col-span-2 relative">
+                                    <select className="w-full appearance-none pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-shadow">
+                                        <option>自动</option>
+                                        <option>开启</option>
+                                        <option>关闭</option>
+                                    </select>
+                                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-3 items-center gap-4 pt-2">
+                                <label className="text-sm font-medium text-slate-600 text-right">重启保存当前卡</label>
+                                <div className="col-span-2">
+                                    <label className="inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" className="sr-only peer" />
+                                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                                    </label>
+                                </div>
+                            </div>
+                         </div>
+                    </div>
+                    <div className="px-6 py-4 bg-slate-50/50 rounded-b-2xl border-t border-slate-100 flex justify-end">
+                        <button className="btn-primary px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-primary-500/20 w-full sm:w-auto">
+                            保存当前设置
+                        </button>
                     </div>
                 </div>
-
-                {/* Group 2: Advanced */}
-                <div className="space-y-4">
-                     <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">高级选项</h4>
-                     <div className="space-y-1.5">
-                        <label className="text-xs font-semibold text-slate-600">VOLTE 配置</label>
-                        <div className="relative">
-                            <select 
-                                className="w-full appearance-none bg-slate-50 border border-slate-200 hover:border-primary-300 text-slate-700 text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm cursor-pointer font-medium"
-                                value={settings.volte}
-                                onChange={(e) => setSettings({...settings, volte: e.target.value})}
-                            >
-                                <option>自动</option>
-                                <option>启用</option>
-                                <option>禁用</option>
-                            </select>
-                            <ChevronDown className="absolute right-3 top-3 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
-                        </div>
-                    </div>
-
-                    <label className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer transition-colors mt-2">
-                        <input 
-                            type="checkbox" 
-                            className="w-5 h-5 border-slate-300 rounded text-primary-600 focus:ring-primary-500 shadow-sm cursor-pointer"
-                            checked={settings.rebootSave}
-                            onChange={(e) => setSettings({...settings, rebootSave: e.target.checked})}
-                        />
-                        <div className="flex flex-col">
-                            <span className="text-sm font-semibold text-slate-700">重启保存当前卡</span>
-                            <span className="text-xs text-slate-400">设备重启后保持当前使用的 SIM 卡槽位</span>
-                        </div>
-                    </label>
-                </div>
             </div>
+        )}
 
-            <div className="px-8 py-5 bg-slate-50/80 border-t border-slate-100 flex justify-end gap-3 backdrop-blur-sm">
-                <button 
-                  onClick={() => setIsSettingsOpen(false)}
-                  className="px-5 py-2.5 text-slate-600 font-semibold text-sm rounded-xl hover:bg-slate-200/50 transition-colors"
-                >
-                    取消
-                </button>
-                <button 
-                  onClick={() => setIsSettingsOpen(false)}
-                  className="btn-primary px-8 py-2.5 rounded-xl text-sm font-bold shadow-lg hover:shadow-xl active:scale-95 transition-all"
-                >
-                    保存设置
-                </button>
-            </div>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 };

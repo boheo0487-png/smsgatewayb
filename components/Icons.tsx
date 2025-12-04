@@ -43,7 +43,10 @@ import {
   Pause,
   MoreHorizontal,
   Filter,
-  Trash2
+  Trash2,
+  Save,
+  Link,
+  Upload
 } from 'lucide-react';
 
 export {
@@ -89,5 +92,8 @@ export {
   Pause,
   MoreHorizontal,
   Filter,
-  Trash2
+  Trash2,
+  Save,
+  Link,
+  Upload
 };

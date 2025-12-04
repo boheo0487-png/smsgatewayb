@@ -49,7 +49,7 @@ const Dashboard: React.FC = () => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
              </span>
-             <p className="text-xs text-slate-600 font-medium">System fully operational</p>
+             <p className="text-xs text-slate-600 font-medium">系统运行正常</p>
            </div>
         </div>
         <div className="flex gap-3">
@@ -69,7 +69,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Device Information Summary */}
-      <div className="glass-card rounded-2xl overflow-hidden flex flex-col shadow-soft ring-1 ring-black/5">
+      <div className="glass-card rounded-2xl overflow-hidden flex flex-col shadow-soft ring-1 ring-black/5 bg-white/60">
           {/* Card Header - Minimal */}
           <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-white/40">
              <div className="flex items-center gap-3">
@@ -78,7 +78,7 @@ const Dashboard: React.FC = () => {
                 </div>
                 <div>
                     <h3 className="text-sm font-bold text-slate-800">设备信息概括</h3>
-                    <p className="text-[10px] text-slate-400 uppercase tracking-wide font-medium">Real-time Metrics</p>
+                    <p className="text-[10px] text-slate-400 uppercase tracking-wide font-medium">实时监控数据</p>
                 </div>
              </div>
              <Link 
@@ -97,13 +97,13 @@ const Dashboard: React.FC = () => {
                         <Server className="w-10 h-10" strokeWidth={1.5} />
                     </div>
                     <div className="absolute -bottom-2 -right-2 px-2.5 py-0.5 bg-emerald-500 text-white text-[10px] font-bold rounded-full border-2 border-white shadow-sm">
-                        ONLINE
+                        在线
                     </div>
                  </div>
                  
                  <div className="flex flex-col lg:items-center">
                     <h4 className="text-lg font-bold text-slate-800">演示设备</h4>
-                    <span className="text-slate-400 text-xs font-mono font-medium bg-slate-100 px-2 py-0.5 rounded-md mt-1">ID: DEV-2024-X88</span>
+                    <span className="text-slate-400 text-xs font-mono font-medium bg-slate-100 px-2 py-0.5 rounded-md mt-1 border border-slate-200">ID: DEV-2024-X88</span>
                  </div>
              </div>
 
@@ -115,23 +115,23 @@ const Dashboard: React.FC = () => {
                         <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-500">
                             <Activity className="w-4 h-4" />
                         </div>
-                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">System</span>
+                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">系统状态</span>
                      </div>
                      <div className="space-y-4">
                          <div className="flex justify-between items-center group">
-                             <span className="text-sm text-slate-500 font-medium">Gateway</span>
+                             <span className="text-sm text-slate-500 font-medium">网关状态</span>
                              <span className="flex h-2.5 w-2.5 relative">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                              </span>
                          </div>
                          <div className="flex justify-between items-center group">
-                             <span className="text-sm text-slate-500 font-medium">IMFS</span>
-                             <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100/50">CONNECTED</span>
+                             <span className="text-sm text-slate-500 font-medium">文件系统</span>
+                             <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100/50">已连接</span>
                          </div>
                          <div className="flex justify-between items-center group">
-                             <span className="text-sm text-slate-500 font-medium">Uptime</span>
-                             <span className="text-sm text-slate-700 font-mono font-semibold">15d 04h 22m</span>
+                             <span className="text-sm text-slate-500 font-medium">运行时长</span>
+                             <span className="text-sm text-slate-700 font-mono font-semibold">15天 04时 22分</span>
                          </div>
                      </div>
                  </div>
@@ -142,19 +142,19 @@ const Dashboard: React.FC = () => {
                         <div className="w-8 h-8 rounded-lg bg-cyan-50 flex items-center justify-center text-cyan-500">
                             <Globe className="w-4 h-4" />
                         </div>
-                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Network</span>
+                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">网络状态</span>
                      </div>
                      <div className="space-y-4">
                          <div className="flex justify-between items-center">
-                             <span className="text-sm text-slate-500 font-medium">WAN</span>
+                             <span className="text-sm text-slate-500 font-medium">WAN口速率</span>
                              <span className="text-xs font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">1 Gbps</span>
                          </div>
                          <div className="flex justify-between items-center">
-                             <span className="text-sm text-slate-500 font-medium">IP Addr</span>
+                             <span className="text-sm text-slate-500 font-medium">IP地址</span>
                              <span className="text-sm text-slate-700 font-mono font-medium">192.168.0.74</span>
                          </div>
                          <div className="flex justify-between items-center">
-                             <span className="text-sm text-slate-500 font-medium">Gateway</span>
+                             <span className="text-sm text-slate-500 font-medium">网关地址</span>
                              <span className="text-sm text-slate-600 font-mono">192.168.0.1</span>
                          </div>
                      </div>
@@ -166,20 +166,20 @@ const Dashboard: React.FC = () => {
                         <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-500">
                             <Shield className="w-4 h-4" />
                         </div>
-                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">License</span>
+                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">授权信息</span>
                      </div>
                      <div className="space-y-4">
                          <div className="flex justify-between items-center">
-                             <span className="text-sm text-slate-500 font-medium">Edition</span>
+                             <span className="text-sm text-slate-500 font-medium">版本</span>
                              <span className="text-sm text-slate-800 font-bold">PRO_V2</span>
                          </div>
                          <div className="flex justify-between items-center">
-                             <span className="text-sm text-slate-500 font-medium">Validity</span>
-                             <span className="text-sm text-amber-600 font-mono font-bold">342 Days</span>
+                             <span className="text-sm text-slate-500 font-medium">有效期</span>
+                             <span className="text-sm text-amber-600 font-mono font-bold">342 天</span>
                          </div>
                          <div className="space-y-1.5">
                              <div className="flex justify-between text-[10px] text-slate-400 font-medium">
-                                <span>Usage</span>
+                                <span>使用率</span>
                                 <span>75%</span>
                              </div>
                              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden shadow-inner">
@@ -193,14 +193,14 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* SMS Statistics Card */}
-      <div className="glass-card rounded-2xl overflow-hidden shadow-soft ring-1 ring-black/5">
+      <div className="glass-card rounded-2xl overflow-hidden shadow-soft ring-1 ring-black/5 bg-white/60">
          <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-3 bg-white/40">
             <div className="p-2 bg-gradient-to-br from-emerald-50 to-white rounded-lg text-emerald-600 shadow-sm ring-1 ring-emerald-50">
                 <MessageSquare className="w-4 h-4" />
             </div>
             <div>
                 <h3 className="text-sm font-bold text-slate-800">短信统计</h3>
-                <p className="text-[10px] text-slate-400 uppercase tracking-wide font-medium">SMS Performance</p>
+                <p className="text-[10px] text-slate-400 uppercase tracking-wide font-medium">短信业务概况</p>
             </div>
          </div>
          
@@ -222,7 +222,7 @@ const Dashboard: React.FC = () => {
                  </thead>
                  <tbody className="divide-y divide-slate-100">
                      {mockSmsStats.map((stat, idx) => (
-                         <tr key={idx} className="hover:bg-white/40 transition-colors group">
+                         <tr key={idx} className="hover:bg-white/60 transition-colors group">
                              <td className="px-6 py-3.5">
                                  <div className="flex items-center gap-2">
                                      <div className="w-2 h-2 rounded-full bg-slate-300 group-hover:bg-primary-500 transition-colors"></div>

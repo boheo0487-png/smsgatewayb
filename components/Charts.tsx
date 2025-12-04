@@ -68,9 +68,9 @@ export const VolumeChart = () => {
 };
 
 const deviceData = [
-  { name: 'Online', value: 45, color: '#10b981' },
-  { name: 'Busy', value: 12, color: '#f59e0b' },
-  { name: 'Offline', value: 3, color: '#ef4444' },
+  { name: '在线', value: 45, color: '#10b981' },
+  { name: '忙碌', value: 12, color: '#f59e0b' },
+  { name: '离线', value: 3, color: '#ef4444' },
 ];
 
 export const DeviceHealthChart = () => {

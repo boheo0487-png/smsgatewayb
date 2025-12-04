@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import DeviceStatus from './components/DeviceStatus';
 import PortStatus from './components/PortStatus';
+import GatewaySettings from './components/GatewaySettings';
 import { 
   Menu, 
   Bell, 
@@ -21,12 +22,12 @@ import {
 } from './components/Icons';
 
 const Placeholder: React.FC<{title: string}> = ({ title }) => (
-  <div className="glass-card p-12 flex flex-col items-center justify-center text-center h-[60vh] text-slate-400 animate-enter m-4 rounded-xl border border-slate-100">
+  <div className="glass-card p-12 flex flex-col items-center justify-center text-center h-[60vh] text-slate-400 animate-enter m-4 rounded-xl border border-white/60">
     <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6 shadow-sm border border-slate-100">
         <span className="text-3xl grayscale opacity-50">🚧</span>
     </div>
     <h2 className="text-lg font-bold text-slate-700 mb-2">{title}</h2>
-    <p className="text-sm text-slate-500">Module under construction.</p>
+    <p className="text-sm text-slate-500">功能模块建设中...</p>
   </div>
 );
 
@@ -40,7 +41,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
       <div className="flex-1 flex flex-col min-w-0 lg:pl-64 transition-all duration-300">
         {/* Header - Simplified & Clean */}
-        <header className="sticky top-0 z-20 h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 bg-white/85 backdrop-blur-md border-b border-white/60 shadow-sm transition-all">
+        <header className="sticky top-0 z-20 h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 bg-white/80 backdrop-blur-xl border-b border-white/60 shadow-sm transition-all">
           {/* Left: Identity Info */}
           <div className="flex items-center gap-4 lg:gap-8 shrink-0">
             <button 
@@ -51,12 +52,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             </button>
             
             <div className="flex items-center gap-3 sm:gap-4 text-xs font-medium">
-              <div className="flex items-center text-slate-600 font-mono bg-white border border-slate-200 px-2.5 py-1 rounded-md shadow-sm">
+              <div className="flex items-center text-slate-600 font-mono bg-white/60 border border-slate-200/80 px-2.5 py-1 rounded-md shadow-sm">
                  <Globe className="w-3.5 h-3.5 mr-2 text-slate-400" />
                  192.168.0.74
               </div>
               
-              <div className="hidden sm:flex items-center bg-primary-50 text-primary-700 px-2.5 py-1 rounded-md border border-primary-100">
+              <div className="hidden sm:flex items-center bg-primary-50/50 text-primary-700 px-2.5 py-1 rounded-md border border-primary-100/50">
                  <Cpu className="w-3.5 h-3.5 mr-2" />
                  EG91
               </div>
@@ -71,7 +72,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                  </div>
                  <input 
                      type="text" 
-                     className="block w-full pl-10 pr-3 py-1.5 text-sm border border-slate-200 rounded-lg leading-5 bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all" 
+                     className="block w-full pl-10 pr-3 py-1.5 text-sm border border-slate-200/80 rounded-lg leading-5 bg-slate-50/50 text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all" 
                      placeholder="搜索菜单" 
                  />
              </div>
@@ -82,17 +83,16 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             {/* Control Panel Indicators - Clean Badges */}
             <div className="hidden xl:flex items-center gap-3 mr-2">
                 {[
-                  { label: 'ALARMS', val: '0', icon: Bell, color: 'text-rose-500', bg: 'hover:bg-rose-50' },
-                  { label: 'PORTS', val: '12/16', icon: Cable, color: 'text-slate-500', bg: 'hover:bg-slate-50' },
-                  { label: 'SIMS', val: '3/8', icon: CreditCard, color: 'text-slate-500', bg: 'hover:bg-slate-50' },
+                  { label: '告警', val: '0', icon: Bell, color: 'text-rose-500', bg: 'hover:bg-rose-50' },
+                  { label: '端口', val: '12/16', icon: Cable, color: 'text-slate-500', bg: 'hover:bg-slate-50' },
+                  { label: 'SIM卡', val: '3/8', icon: CreditCard, color: 'text-slate-500', bg: 'hover:bg-slate-50' },
                 ].map((item, i) => (
                   <button key={i} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border border-transparent hover:border-slate-200 transition-all duration-200 ${item.bg}`}>
                       <div className="relative">
                         <item.icon className={`w-4 h-4 ${item.color}`} strokeWidth={2} />
-                        {item.label === 'ALARMS' && item.val !== '0' && <span className="absolute -top-1 -right-1 w-2 h-2 bg-rose-500 rounded-full"></span>}
+                        {item.label === '告警' && item.val !== '0' && <span className="absolute -top-1 -right-1 w-2 h-2 bg-rose-500 rounded-full"></span>}
                       </div>
                       <div className="flex flex-col items-start leading-none">
-                          <span className="text-[10px] font-bold text-slate-400 mb-0.5 tracking-wider">{item.label}</span>
                           <span className="text-xs font-bold text-slate-700 font-mono">{item.val}</span>
                       </div>
                   </button>
@@ -112,7 +112,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                    </div>
                    <div className="hidden md:flex flex-col items-start">
                       <span className="text-xs font-bold text-slate-700 leading-none mb-0.5">Admin</span>
-                      <span className="text-[10px] text-slate-400 uppercase">Owner</span>
+                      <span className="text-[10px] text-slate-400 uppercase">所有者</span>
                    </div>
                    <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`} />
                 </button>
@@ -120,7 +120,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 {userMenuOpen && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setUserMenuOpen(false)}></div>
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl z-20 overflow-hidden ring-1 ring-black/5 animate-enter border border-slate-100">
+                    <div className="absolute right-0 mt-2 w-56 bg-white/95 backdrop-blur-md rounded-xl shadow-xl z-20 overflow-hidden ring-1 ring-black/5 animate-enter border border-slate-100">
                         <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/50">
                             <p className="text-sm font-bold text-slate-800">系统管理员</p>
                             <p className="text-xs text-slate-500 mt-0.5">admin@telarvo.com</p>
@@ -160,6 +160,7 @@ const App: React.FC = () => {
           <Route path="/" element={<Dashboard />} />
           <Route path="/device/status" element={<DeviceStatus />} />
           <Route path="/gateway/status" element={<PortStatus />} />
+          <Route path="/gateway/config" element={<GatewaySettings />} />
           <Route path="/device/*" element={<Placeholder title="设备管理" />} />
           <Route path="/gateway/*" element={<Placeholder title="网关设置" />} />
           <Route path="/sim/*" element={<Placeholder title="SIM卡管理" />} />

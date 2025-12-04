@@ -15,18 +15,18 @@ interface InfoRowProps {
 }
 
 const InfoRow: React.FC<InfoRowProps> = ({ label, value, isLast = false }) => (
-  <div className={`flex flex-col sm:flex-row sm:items-center justify-between py-3.5 ${!isLast ? 'border-b border-white/50' : ''}`}>
-    <span className="text-xs font-bold text-slate-500 mb-1 sm:mb-0 uppercase tracking-wide">{label}</span>
+  <div className={`flex flex-col sm:flex-row sm:items-center justify-between py-3.5 ${!isLast ? 'border-b border-slate-100' : ''} group hover:bg-slate-50/50 px-2 -mx-2 rounded-lg transition-colors`}>
+    <span className="text-xs font-bold text-slate-500 mb-1 sm:mb-0 uppercase tracking-wide group-hover:text-slate-600 transition-colors">{label}</span>
     <div className="text-sm font-medium text-slate-800 text-right font-mono">{value}</div>
   </div>
 );
 
 const StatusBadge: React.FC<{ type: 'success' | 'info' | 'warning' | 'error'; text: string; icon?: boolean }> = ({ type, text, icon = true }) => {
   const styles = {
-    success: 'text-emerald-700 border-emerald-200/50 bg-emerald-50/80',
-    info: 'text-primary-700 border-primary-200/50 bg-primary-50/80',
-    warning: 'text-amber-700 border-amber-200/50 bg-amber-50/80',
-    error: 'text-rose-700 border-rose-200/50 bg-rose-50/80',
+    success: 'text-emerald-700 border-emerald-200/60 bg-emerald-50/80',
+    info: 'text-primary-700 border-primary-200/60 bg-primary-50/80',
+    warning: 'text-amber-700 border-amber-200/60 bg-amber-50/80',
+    error: 'text-rose-700 border-rose-200/60 bg-rose-50/80',
   };
   
   const icons = {
@@ -39,20 +39,22 @@ const StatusBadge: React.FC<{ type: 'success' | 'info' | 'warning' | 'error'; te
   const Icon = icons[type];
 
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wide border backdrop-blur-sm shadow-sm ${styles[type]}`}>
-      {icon && <Icon className="w-3.5 h-3.5" />}
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wide border shadow-sm ${styles[type]}`}>
+      {icon && <Icon className="w-3 h-3" />}
       {text}
     </span>
   );
 };
 
 const SectionCard: React.FC<{ title: string; icon: React.ElementType; color: string; children: React.ReactNode }> = ({ title, icon: Icon, color, children }) => (
-    <div className="glass-card rounded-xl overflow-hidden hover:shadow-glass-hover transition-all duration-300">
-        <div className="px-5 py-3 border-b border-white/50 flex items-center gap-2 bg-white/40 backdrop-blur-md">
-          <Icon className={`w-4 h-4 ${color}`} strokeWidth={2} />
-          <h2 className="text-sm font-bold text-slate-700 uppercase tracking-wide">{title}</h2>
+    <div className="glass-card rounded-xl overflow-hidden shadow-soft ring-1 ring-black/5 hover:shadow-glass-hover transition-all duration-300">
+        <div className="px-5 py-3 border-b border-slate-100 flex items-center gap-3 bg-white/60 backdrop-blur-md">
+          <div className={`p-1.5 rounded-md ${color.replace('text-', 'bg-').replace('600', '50')} ${color}`}>
+             <Icon className="w-4 h-4" strokeWidth={2} />
+          </div>
+          <h2 className="text-sm font-bold text-slate-800 uppercase tracking-wide">{title}</h2>
         </div>
-        <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-0 bg-white/30 backdrop-blur-sm">
+        <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-0 bg-white/40">
             {children}
         </div>
     </div>
@@ -60,66 +62,71 @@ const SectionCard: React.FC<{ title: string; icon: React.ElementType; color: str
 
 const DeviceStatus: React.FC = () => {
   return (
-    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex flex-col gap-1 mb-2">
-        <h1 className="text-2xl font-bold text-slate-800 tracking-tight">设备状态</h1>
-        <p className="text-xs text-slate-500 font-mono font-bold bg-white/50 border border-white/50 backdrop-blur-sm inline-block px-2 py-1 rounded shadow-sm">ID: 0C5E1A82</p>
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1200px] mx-auto">
+      <div className="flex items-end justify-between mb-2">
+        <div>
+            <h1 className="text-2xl font-bold text-slate-800 tracking-tight">设备状态</h1>
+            <p className="text-sm text-slate-500 mt-1">查看详细的系统运行参数与配置信息</p>
+        </div>
+        <div className="hidden sm:block">
+            <span className="text-xs text-slate-500 font-mono font-bold bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm">ID: 0C5E1A82</span>
+        </div>
       </div>
 
-      <SectionCard title="System Status" icon={Server} color="text-primary-600">
+      <SectionCard title="系统状态" icon={Server} color="text-primary-600">
            <div className="flex flex-col">
-              <InfoRow label="Device ID" value="0C5E1A82" />
-              <InfoRow label="MAC Addr" value="e2:08:0c:5e:1a:82" />
-              <InfoRow label="Firmware" value="20251126" />
-              <InfoRow label="Gateway" value={<StatusBadge type="success" text="CONNECTED" />} />
-              <InfoRow label="Time" value="2025-11-28 11:01:03" />
-              <InfoRow label="Uptime" value={<span className="text-primary-600 font-bold">1D 23h 22m</span>} isLast={true} />
+              <InfoRow label="设备ID" value="0C5E1A82" />
+              <InfoRow label="MAC地址" value="e2:08:0c:5e:1a:82" />
+              <InfoRow label="固件版本" value="20251126" />
+              <InfoRow label="网关状态" value={<StatusBadge type="success" text="已连接" />} />
+              <InfoRow label="系统时间" value="2025-11-28 11:01:03" />
+              <InfoRow label="运行时长" value={<span className="text-primary-600 font-bold">1天 23小时 22分</span>} isLast={true} />
            </div>
            <div className="flex flex-col">
               <InfoRow 
-                label="Barcode" 
+                label="条形码" 
                 value={
                   <div className="flex items-center justify-end gap-2 text-slate-800">
                      <Barcode className="w-4 h-4 text-slate-400" />
-                     <span className="text-[10px] bg-white/50 border border-white/50 px-1 py-0.5 rounded opacity-80 backdrop-blur-sm">||||||||||||</span>
+                     <span className="text-[10px] bg-slate-50 border border-slate-200 px-1.5 py-0.5 rounded text-slate-500">||||||||||||</span>
                   </div>
                 } 
               />
-              <InfoRow label="Model" value="EG91NAXGA" />
-              <InfoRow label="Software" value="1.34.26691" />
-              <InfoRow label="IMFS" value={<StatusBadge type="success" text="CONNECTED" />} />
-              <InfoRow label="Timezone" value="+08:00" isLast={true} />
+              <InfoRow label="设备型号" value="EG91NAXGA" />
+              <InfoRow label="软件版本" value="1.34.26691" />
+              <InfoRow label="文件系统" value={<StatusBadge type="success" text="已连接" />} />
+              <InfoRow label="时区" value="+08:00" isLast={true} />
            </div>
       </SectionCard>
 
-      <SectionCard title="WAN Interface" icon={Globe} color="text-cyan-600">
+      <SectionCard title="WAN口信息" icon={Globe} color="text-cyan-600">
            <div className="flex flex-col">
-              <InfoRow label="Status" value={<StatusBadge type="success" text="ONLINE" icon={true} />} />
-              <InfoRow label="IP Addr" value="192.168.0.74" />
-              <InfoRow label="Gateway" value="192.168.0.1" />
+              <InfoRow label="连接状态" value={<StatusBadge type="success" text="在线" icon={true} />} />
+              <InfoRow label="IP地址" value="192.168.0.74" />
+              <InfoRow label="网关地址" value="192.168.0.1" />
               <InfoRow label="DNS 2" value="114.114.114.114" isLast={true} />
            </div>
            <div className="flex flex-col">
-              <InfoRow label="Protocol" value={<span className="font-bold">STATIC</span>} />
-              <InfoRow label="Subnet" value="255.255.255.0" />
+              <InfoRow label="协议类型" value={<span className="font-bold text-slate-700">静态IP</span>} />
+              <InfoRow label="子网掩码" value="255.255.255.0" />
               <InfoRow label="DNS 1" value="192.168.0.1" isLast={true} />
            </div>
       </SectionCard>
 
-      <SectionCard title="License Info" icon={Shield} color="text-amber-600">
+      <SectionCard title="授权许可" icon={Shield} color="text-amber-600">
            <div className="flex flex-col">
-              <InfoRow label="License ID" value="111111111111111" />
-              <InfoRow label="Created" value="2025-05-10" />
-              <InfoRow label="Remaining" value={<span className="text-emerald-600 font-bold">UNLIMITED</span>} />
-              <InfoRow label="Allow IMSI" value="460,461" />
-              <InfoRow label="Allow Carrier" value="46001" isLast={true} />
+              <InfoRow label="许可ID" value="111111111111111" />
+              <InfoRow label="创建时间" value="2025-05-10" />
+              <InfoRow label="剩余时间" value={<span className="text-emerald-600 font-bold">无限制</span>} />
+              <InfoRow label="许可IMSI" value="460,461" />
+              <InfoRow label="许可运营商" value="46001" isLast={true} />
            </div>
            <div className="flex flex-col">
-              <InfoRow label="Status" value={<StatusBadge type="info" text="NORMAL" />} />
-              <InfoRow label="Burned" value="2025-05-10" />
-              <InfoRow label="IMEI Mod" value={<StatusBadge type="success" text="ENABLED" />} />
-              <InfoRow label="Block IMSI" value="462" />
-              <InfoRow label="Block Carrier" value="46000" isLast={true} />
+              <InfoRow label="许可状态" value={<StatusBadge type="info" text="正常" />} />
+              <InfoRow label="烧录时间" value="2025-05-10" />
+              <InfoRow label="IMEI修改" value={<StatusBadge type="success" text="已启用" />} />
+              <InfoRow label="黑名单IMSI" value="462" />
+              <InfoRow label="黑名单运营商" value="46000" isLast={true} />
            </div>
       </SectionCard>
     </div>

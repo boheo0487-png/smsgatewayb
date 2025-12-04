@@ -40,7 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       path: '/device',
       submenu: [
         { name: '设备状态', path: '/device/status' },
-        { name: '网络设置', path: '/device/network' },
+        { name: '网络设置', path: '/gateway/config' },
         { name: '系统版本', path: '/device/version' },
         { name: '系统日志', path: '/device/logs' },
         { name: '系统工具', path: '/device/tools' },
@@ -134,20 +134,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       />
 
       <aside 
-        className={`fixed top-0 left-0 z-40 h-full w-64 glass-panel border-r-0 lg:border-r border-white/40 shadow-glass lg:shadow-none transform transition-transform duration-300 lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`fixed top-0 left-0 z-40 h-full w-64 glass-panel border-r border-white/60 shadow-[2px_0_8px_0_rgba(0,0,0,0.05)] transform transition-transform duration-300 lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <div className="flex flex-col h-full relative bg-white/40 backdrop-blur-xl">
           
           {/* Logo */}
           <div className="h-16 flex items-center px-6 shrink-0 border-b border-white/30">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 relative flex-shrink-0 flex items-center justify-center bg-primary-600/90 backdrop-blur rounded-lg shadow-lg text-white">
-                 <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5" stroke="currentColor" strokeWidth="2.5">
-                    <path d="M12 2L2 7L12 12L22 7L12 2Z" />
-                    <path d="M2 17L12 22L22 17" />
-                    <path d="M2 12L12 17L22 12" />
-                 </svg>
-              </div>
+              <svg className="w-8 h-8 text-slate-800" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12.88 2.38a1 1 0 0 0-1.76 0l-8 4.8a1 1 0 0 0-.48.86v9.6a1 1 0 0 0 .48.86l8 4.8a1 1 0 0 0 1.76 0l8-4.8a1 1 0 0 0 .48-.86v-9.6a1 1 0 0 0-.48-.86l-8-4.8zM12 5.26l6.23 3.74L12 12.74 5.77 9 12 5.26zM5.5 11.66l6 3.6V22.5l-6-3.6V11.66zm7 10.84v-7.24l6-3.6V18.9l-6 3.6z"/>
+              </svg>
               <span className="text-lg font-bold text-slate-800 tracking-tight">Telarvo</span>
             </div>
           </div>
@@ -175,14 +171,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
                   >
                     <div className="flex items-center w-full">
                        <item.icon className={`w-4 h-4 mr-3 transition-colors ${active ? 'text-primary-600' : 'text-slate-500 group-hover:text-slate-700'}`} strokeWidth={active ? 2 : 1.5} />
-                       <span className={`flex-1 ${active ? 'font-bold' : ''}`}>{item.name}</span>
+                       {hasSubmenu ? (
+                           <span className={`flex-1 ${active ? 'font-bold' : ''}`}>{item.name}</span>
+                       ) : (
+                           <Link to={item.path} className={`flex-1 ${active ? 'font-bold' : ''}`} onClick={() => setIsOpen(false)}>{item.name}</Link>
+                       )}
                        {hasSubmenu && (
                          <ChevronRight className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-90' : ''} ${active ? 'text-primary-500' : 'text-slate-400'}`} />
                        )}
                     </div>
-                    {!hasSubmenu && (
-                        <Link to={item.path} className="absolute inset-0" onClick={() => setIsOpen(false)} />
-                    )}
                   </div>
 
                   {/* Submenu */}
