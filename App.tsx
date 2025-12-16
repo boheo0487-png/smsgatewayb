@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
@@ -5,6 +6,7 @@ import Dashboard from './components/Dashboard';
 import DeviceStatus from './components/DeviceStatus';
 import PortStatus from './components/PortStatus';
 import GatewaySettings from './components/GatewaySettings';
+import SystemVersion from './components/SystemVersion';
 import { 
   Menu, 
   Bell, 
@@ -159,6 +161,7 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/device/status" element={<DeviceStatus />} />
+          <Route path="/device/version" element={<SystemVersion />} />
           <Route path="/gateway/status" element={<PortStatus />} />
           <Route path="/gateway/config" element={<GatewaySettings />} />
           <Route path="/device/*" element={<Placeholder title="设备管理" />} />

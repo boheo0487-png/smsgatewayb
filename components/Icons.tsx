@@ -46,7 +46,11 @@ import {
   Trash2,
   Save,
   Link,
-  Upload
+  Upload,
+  Download,
+  RotateCcw,
+  FileUp,
+  FileDown
 } from 'lucide-react';
 
 export {
@@ -95,5 +99,9 @@ export {
   Trash2,
   Save,
   Link,
-  Upload
+  Upload,
+  Download,
+  RotateCcw,
+  FileUp,
+  FileDown
 };
