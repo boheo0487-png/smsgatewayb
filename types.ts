@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export interface StatCardProps {
@@ -29,4 +30,14 @@ export interface ChartDataPoint {
   name: string;
   sent: number;
   failed: number;
+}
+
+export interface UssdData {
+  id: string;
+  portName: string;
+  terminal: string;
+  command: string;
+  lastResponse: string;
+  status: 'success' | 'failed' | 'pending' | 'idle';
+  timestamp: string;
 }

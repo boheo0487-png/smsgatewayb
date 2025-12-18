@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 import { 
   LayoutDashboard, 
@@ -9,7 +10,7 @@ import {
   Bell, 
   Search, 
   Plus, 
-  MoreVertical,
+  MoreVertical, 
   CheckCircle2,
   AlertCircle,
   Clock,
@@ -50,7 +51,26 @@ import {
   Download,
   RotateCcw,
   FileUp,
-  FileDown
+  FileDown,
+  Lock,
+  Check,
+  AlertTriangle,
+  Settings2,
+  Database,
+  ShieldCheck,
+  Zap,
+  /* Adding missing Info icon */
+  Info,
+  /* Adding missing Terminal icon */
+  Terminal,
+  /* Adding PlayCircle icon */
+  PlayCircle,
+  /* Adding missing ShieldAlert icon to resolve import errors */
+  ShieldAlert,
+  /* Adding missing Calendar icon to resolve import errors */
+  Calendar,
+  /* Adding missing Edit3 icon */
+  Edit3
 } from 'lucide-react';
 
 export {
@@ -103,5 +123,24 @@ export {
   Download,
   RotateCcw,
   FileUp,
-  FileDown
+  FileDown,
+  Lock,
+  Check,
+  AlertTriangle,
+  Settings2,
+  Database,
+  ShieldCheck,
+  Zap,
+  /* Adding missing Info icon */
+  Info,
+  /* Adding missing Terminal icon */
+  Terminal,
+  /* Adding PlayCircle icon */
+  PlayCircle,
+  /* Adding missing ShieldAlert icon to resolve import errors */
+  ShieldAlert,
+  /* Adding missing Calendar icon to resolve import errors */
+  Calendar,
+  /* Adding missing Edit3 icon */
+  Edit3
 };

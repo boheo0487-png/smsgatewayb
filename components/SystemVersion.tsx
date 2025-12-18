@@ -191,7 +191,7 @@ const SystemVersion: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-slate-200 pb-6">
         <div>
-           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">系统维护</h1>
+           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">系统版本</h1>
            <p className="text-sm text-slate-500 mt-1.5">管理设备固件版本、配置备份及授权许可</p>
         </div>
       </div>

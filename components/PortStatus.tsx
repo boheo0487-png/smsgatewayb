@@ -1,4 +1,6 @@
+
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   Cable, 
   RefreshCw, 
@@ -139,18 +141,6 @@ const PortStatus: React.FC = () => {
       rebootSave: false
   });
 
-  // Calculate Aggregated Stats
-  const totalStats = ports.reduce((acc, port) => ({
-      received: acc.received + port.smsStats.received,
-      sent: acc.sent + port.smsStats.sent,
-      sending: acc.sending + port.smsStats.sending,
-      sentSuccess: acc.sentSuccess + port.smsStats.sentSuccess,
-      sentFailed: acc.sentFailed + port.smsStats.sentFailed,
-      consecFailed: acc.consecFailed + port.smsStats.consecFailed
-  }), { received: 0, sent: 0, sending: 0, sentSuccess: 0, sentFailed: 0, consecFailed: 0 });
-
-  const totalSuccessRate = totalStats.sent > 0 ? (totalStats.sentSuccess / totalStats.sent) * 100 : 0;
-
   const toggleSelectAll = () => {
     if (selectedIds.length === ports.length) {
       setSelectedIds([]);
@@ -212,42 +202,6 @@ const PortStatus: React.FC = () => {
               <h1 className="text-2xl font-bold text-slate-800 tracking-tight">端口状态</h1>
               <div className="flex items-center gap-4 mt-1">
                   <p className="text-sm text-slate-500 font-medium">管理蜂窝端口配置与实时状态</p>
-                  <div className="hidden sm:block h-4 w-px bg-slate-300"></div>
-                  
-                  {/* Aggregated SMS Stats Badge with Tooltip */}
-                  <div className="relative group cursor-help z-20">
-                      <div className="flex items-center gap-2 px-3 py-1 bg-white border border-slate-200 rounded-lg shadow-sm hover:border-primary-300 transition-colors">
-                          <MessageSquare className="w-3.5 h-3.5 text-primary-500" />
-                          <span className="text-xs text-slate-500 font-medium">短信总数</span>
-                          <span className="text-sm font-bold text-slate-800 font-mono">{totalStats.sent.toLocaleString()}</span>
-                      </div>
-
-                      {/* Tooltip */}
-                      <div className="absolute left-0 top-full mt-2 w-64 p-4 bg-slate-900/95 backdrop-blur-md rounded-xl shadow-xl border border-white/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 translate-y-2 group-hover:translate-y-0">
-                           <div className="space-y-3">
-                                <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                                    <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                                        <MessageSquare className="w-3 h-3 text-slate-400" />
-                                        全网短信统计
-                                    </span>
-                                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${totalSuccessRate >= 90 ? 'bg-emerald-500/20 text-emerald-400' : totalSuccessRate >= 50 ? 'bg-amber-500/20 text-amber-400' : 'bg-rose-500/20 text-rose-400'}`}>
-                                        成功率 {totalSuccessRate.toFixed(1)}%
-                                    </span>
-                                </div>
-                                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px]">
-                                    <div className="flex justify-between"><span className="text-slate-400">接收:</span><span className="font-mono text-white">{totalStats.received}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">发送:</span><span className="font-mono text-white">{totalStats.sent}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">正在发送:</span><span className="font-mono text-blue-400">{totalStats.sending}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">发送成功:</span><span className="font-mono text-emerald-400">{totalStats.sentSuccess}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-400">发送失败:</span><span className="font-mono text-rose-400">{totalStats.sentFailed}</span></div>
-                                    <div className="flex justify-between col-span-2 border-t border-white/10 pt-2 mt-1">
-                                        <span className="text-slate-400">连续发送失败:</span>
-                                        <span className={`font-mono font-bold ${totalStats.consecFailed > 0 ? 'text-rose-500' : 'text-slate-500'}`}>{totalStats.consecFailed}</span>
-                                    </div>
-                                </div>
-                           </div>
-                      </div>
-                  </div>
               </div>
             </div>
             
@@ -271,12 +225,12 @@ const PortStatus: React.FC = () => {
                         type="checkbox" 
                         checked={isAllSelected} 
                         onChange={toggleSelectAll} 
-                        className="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500 cursor-pointer transition-colors" 
+                        className="w-5 h-5 rounded border-slate-300 text-primary-600 focus:ring-primary-500 cursor-pointer transition-colors" 
                     />
                 </div>
                 <div className="flex-1 grid grid-cols-12 gap-4">
-                    <div className="col-span-3">端口标识</div>
-                    <div className="col-span-3">硬件信息</div>
+                    <div className="col-span-3">端口/当前终端</div>
+                    <div className="col-span-3">模块型号</div>
                     <div className="col-span-4">IMEI 配置</div>
                     <div className="col-span-2 text-right">操作</div>
                 </div>
@@ -298,39 +252,33 @@ const PortStatus: React.FC = () => {
                     {/* Content Grid */}
                     <div className="flex-1 grid grid-cols-12 gap-4 items-center">
                         {/* Port Details */}
-                        <div className="col-span-3 flex items-center gap-3">
-                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center border transition-all shadow-sm ${
-                                port.status === 'enabled' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 
-                                port.status === 'offline' ? 'bg-slate-50 border-slate-200 text-slate-400' :
-                                'bg-amber-50 border-amber-100 text-amber-600'
-                            }`}>
-                                <Cable className="w-4 h-4" strokeWidth={1.5} />
-                            </div>
-                            <div>
-                                <div className="font-bold text-slate-800 text-sm tracking-tight">{port.portName}</div>
-                                <div className="flex items-center gap-2 mt-0.5">
-                                    <span className="text-[10px] text-slate-500 font-mono bg-slate-100 px-1 rounded">{port.terminal}</span>
-                                     <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide w-fit ${
-                                         port.status === 'enabled' ? 'bg-emerald-50 text-emerald-600' : 
-                                         port.status === 'offline' ? 'bg-slate-100 text-slate-500' :
-                                         'bg-amber-50 text-amber-600'
-                                     }`}>
-                                         <span className={`w-1 h-1 rounded-full ${
-                                            port.status === 'enabled' ? 'bg-emerald-500' : 
-                                            port.status === 'offline' ? 'bg-slate-400' : 
-                                            'bg-amber-500'
-                                         }`}></span>
-                                         {port.status === 'enabled' ? '已启用' : port.status === 'offline' ? '离线' : '禁用'}
-                                     </div>
+                        <div className="col-span-3">
+                            <div className="flex items-center gap-3">
+                                <div>
+                                    <div className="font-bold text-slate-800 text-sm tracking-tight">{port.portName}</div>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                        <span className="text-[10px] text-slate-500 font-mono bg-slate-100 px-1 rounded">{port.terminal}</span>
+                                        <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide w-fit ${
+                                            port.status === 'enabled' ? 'bg-emerald-50 text-emerald-600' : 
+                                            port.status === 'offline' ? 'bg-slate-100 text-slate-500' :
+                                            'bg-amber-50 text-amber-600'
+                                        }`}>
+                                            <span className={`w-1 h-1 rounded-full ${
+                                                port.status === 'enabled' ? 'bg-emerald-500' : 
+                                                port.status === 'offline' ? 'bg-slate-400' : 
+                                                'bg-amber-500'
+                                            }`}></span>
+                                            {port.status === 'enabled' ? '已启用' : port.status === 'offline' ? '离线' : '禁用'}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Hardware */}
+                        {/* Hardware / Module Model */}
                         <div className="col-span-3">
-                            <div className="flex flex-col gap-0.5">
+                            <div className="flex flex-col">
                                 <span className="text-xs font-bold text-slate-700 font-mono truncate" title={port.model}>{port.model}</span>
-                                <span className="text-[10px] text-slate-400 font-medium bg-slate-100 border border-slate-200 w-fit px-1.5 rounded">V2.0</span>
                             </div>
                         </div>
 
@@ -398,14 +346,16 @@ const PortStatus: React.FC = () => {
              </div>
         </div>
 
-        {/* Settings Modal */}
-        {isSettingsOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm" onClick={() => setIsSettingsOpen(false)}></div>
-                <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md border border-white/60 animate-enter">
-                    <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 rounded-t-2xl">
+        {/* Settings Modal (using createPortal for global overlay) */}
+        {isSettingsOpen && createPortal(
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                {/* Overlay covering entire screen */}
+                <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setIsSettingsOpen(false)}></div>
+                
+                <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md border border-white/60 animate-enter overflow-hidden">
+                    <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                         <h3 className="font-bold text-slate-800">常规设置</h3>
-                        <button onClick={() => setIsSettingsOpen(false)} className="p-1 rounded-lg hover:bg-slate-200/50 text-slate-400 hover:text-slate-600 transition-colors">
+                        <button onClick={() => setIsSettingsOpen(false)} className="p-1.5 rounded-lg hover:bg-slate-200/50 text-slate-400 hover:text-slate-600 transition-colors">
                             <X className="w-5 h-5" />
                         </button>
                     </div>
@@ -414,10 +364,15 @@ const PortStatus: React.FC = () => {
                             <div className="grid grid-cols-3 items-center gap-4">
                                 <label className="text-sm font-medium text-slate-600 text-right">网络类型</label>
                                 <div className="col-span-2 relative">
-                                    <select className="w-full appearance-none pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-shadow">
+                                    <select 
+                                      value={settings.networkType}
+                                      onChange={(e) => setSettings({...settings, networkType: e.target.value})}
+                                      className="w-full appearance-none pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-shadow"
+                                    >
                                         <option>自动</option>
-                                        <option>4G Only</option>
-                                        <option>3G Only</option>
+                                        <option>2G</option>
+                                        <option>3G</option>
+                                        <option>4G</option>
                                     </select>
                                     <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                                 </div>
@@ -425,7 +380,11 @@ const PortStatus: React.FC = () => {
                             <div className="grid grid-cols-3 items-center gap-4">
                                 <label className="text-sm font-medium text-slate-600 text-right">注册类型</label>
                                 <div className="col-span-2 relative">
-                                    <select className="w-full appearance-none pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-shadow">
+                                    <select 
+                                      value={settings.regType}
+                                      onChange={(e) => setSettings({...settings, regType: e.target.value})}
+                                      className="w-full appearance-none pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-shadow"
+                                    >
                                         <option>数据网络</option>
                                         <option>语音网络</option>
                                     </select>
@@ -435,7 +394,11 @@ const PortStatus: React.FC = () => {
                             <div className="grid grid-cols-3 items-center gap-4">
                                 <label className="text-sm font-medium text-slate-600 text-right">VOLTE配置</label>
                                 <div className="col-span-2 relative">
-                                    <select className="w-full appearance-none pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-shadow">
+                                    <select 
+                                      value={settings.volte}
+                                      onChange={(e) => setSettings({...settings, volte: e.target.value})}
+                                      className="w-full appearance-none pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-shadow"
+                                    >
                                         <option>自动</option>
                                         <option>开启</option>
                                         <option>关闭</option>
@@ -445,22 +408,35 @@ const PortStatus: React.FC = () => {
                             </div>
                             <div className="grid grid-cols-3 items-center gap-4 pt-2">
                                 <label className="text-sm font-medium text-slate-600 text-right">重启保存当前卡</label>
-                                <div className="col-span-2">
-                                    <label className="inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" className="sr-only peer" />
-                                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-                                    </label>
+                                <div className="col-span-2 flex items-center">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={settings.rebootSave}
+                                        onChange={(e) => setSettings({...settings, rebootSave: e.target.checked})}
+                                        className="w-5 h-5 rounded border-slate-300 text-primary-600 focus:ring-primary-500 cursor-pointer transition-colors" 
+                                    />
+                                    <span className="ml-2 text-xs text-slate-400 font-medium">启用</span>
                                 </div>
                             </div>
                          </div>
                     </div>
-                    <div className="px-6 py-4 bg-slate-50/50 rounded-b-2xl border-t border-slate-100 flex justify-end">
-                        <button className="btn-primary px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-primary-500/20 w-full sm:w-auto">
-                            保存当前设置
+                    <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+                        <button 
+                            onClick={() => setIsSettingsOpen(false)}
+                            className="px-5 py-2.5 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors"
+                        >
+                            取消
+                        </button>
+                        <button 
+                            onClick={() => setIsSettingsOpen(false)}
+                            className="btn-primary px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-primary-500/20 transition-all"
+                        >
+                            保存更改
                         </button>
                     </div>
                 </div>
-            </div>
+            </div>,
+            document.body
         )}
 
       </div>

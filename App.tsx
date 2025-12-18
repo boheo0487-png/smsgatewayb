@@ -5,8 +5,14 @@ import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import DeviceStatus from './components/DeviceStatus';
 import PortStatus from './components/PortStatus';
+import ImeiSettings from './components/ImeiSettings';
+import UssdManagement from './components/UssdManagement';
+import AtCommandManagement from './components/AtCommandManagement';
 import GatewaySettings from './components/GatewaySettings';
 import SystemVersion from './components/SystemVersion';
+import SystemLogs from './components/SystemLogs';
+import SystemTools from './components/SystemTools';
+import SystemReboot from './components/SystemReboot';
 import { 
   Menu, 
   Bell, 
@@ -67,7 +73,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           </div>
 
           {/* Center: Search (Minimal) */}
-          <div className="hidden md:flex flex-1 max-w-sm px-6">
+          <div className="hidden md:flex flex-1 max-sm px-6">
              <div className="relative w-full group">
                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                      <Search className="h-4 w-4 text-slate-400 group-focus-within:text-primary-500 transition-colors" />
@@ -85,7 +91,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             {/* Control Panel Indicators - Clean Badges */}
             <div className="hidden xl:flex items-center gap-3 mr-2">
                 {[
-                  { label: '告警', val: '0', icon: Bell, color: 'text-rose-500', bg: 'hover:bg-rose-50' },
+                  { label: '告警', val: '2', icon: Bell, color: 'text-rose-500', bg: 'hover:bg-rose-50' },
                   { label: '端口', val: '12/16', icon: Cable, color: 'text-slate-500', bg: 'hover:bg-slate-50' },
                   { label: 'SIM卡', val: '3/8', icon: CreditCard, color: 'text-slate-500', bg: 'hover:bg-slate-50' },
                 ].map((item, i) => (
@@ -162,7 +168,13 @@ const App: React.FC = () => {
           <Route path="/" element={<Dashboard />} />
           <Route path="/device/status" element={<DeviceStatus />} />
           <Route path="/device/version" element={<SystemVersion />} />
+          <Route path="/device/logs" element={<SystemLogs />} />
+          <Route path="/device/tools" element={<SystemTools />} />
+          <Route path="/device/reboot" element={<SystemReboot />} />
           <Route path="/gateway/status" element={<PortStatus />} />
+          <Route path="/gateway/imei" element={<ImeiSettings />} />
+          <Route path="/gateway/ussd" element={<UssdManagement />} />
+          <Route path="/gateway/at" element={<AtCommandManagement />} />
           <Route path="/gateway/config" element={<GatewaySettings />} />
           <Route path="/device/*" element={<Placeholder title="设备管理" />} />
           <Route path="/gateway/*" element={<Placeholder title="网关设置" />} />
