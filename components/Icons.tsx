@@ -1,5 +1,4 @@
 
-
 import React from 'react';
 import { 
   LayoutDashboard, 
@@ -70,7 +69,19 @@ import {
   /* Adding missing Calendar icon to resolve import errors */
   Calendar,
   /* Adding missing Edit3 icon */
-  Edit3
+  Edit3,
+  /* Adding missing icons for SimStatus component */
+  List,
+  XCircle,
+  MinusCircle,
+  UserMinus,
+  PhoneCall,
+  ArrowLeftRight,
+  PlusCircle,
+  Circle,
+  /* Adding missing HelpCircle and ArrowRight icons */
+  HelpCircle,
+  ArrowRight
 } from 'lucide-react';
 
 export {
@@ -142,5 +153,17 @@ export {
   /* Adding missing Calendar icon to resolve import errors */
   Calendar,
   /* Adding missing Edit3 icon */
-  Edit3
+  Edit3,
+  /* Adding missing icons for SimStatus component */
+  List,
+  XCircle,
+  MinusCircle,
+  UserMinus,
+  PhoneCall,
+  ArrowLeftRight,
+  PlusCircle,
+  Circle,
+  /* Adding missing HelpCircle and ArrowRight icons */
+  HelpCircle,
+  ArrowRight
 };

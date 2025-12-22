@@ -13,6 +13,8 @@ import SystemVersion from './components/SystemVersion';
 import SystemLogs from './components/SystemLogs';
 import SystemTools from './components/SystemTools';
 import SystemReboot from './components/SystemReboot';
+import SimStatus from './components/SimStatus';
+import SimSettings from './components/SimSettings';
 import { 
   Menu, 
   Bell, 
@@ -176,6 +178,8 @@ const App: React.FC = () => {
           <Route path="/gateway/ussd" element={<UssdManagement />} />
           <Route path="/gateway/at" element={<AtCommandManagement />} />
           <Route path="/gateway/config" element={<GatewaySettings />} />
+          <Route path="/sim/status" element={<SimStatus />} />
+          <Route path="/sim/settings" element={<SimSettings />} />
           <Route path="/device/*" element={<Placeholder title="设备管理" />} />
           <Route path="/gateway/*" element={<Placeholder title="网关设置" />} />
           <Route path="/sim/*" element={<Placeholder title="SIM卡管理" />} />
