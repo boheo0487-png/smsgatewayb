@@ -32,7 +32,12 @@ import {
   FileDown,
   Zap,
   Power,
-  MinusCircle
+  MinusCircle,
+  Database,
+  Clock,
+  ShieldCheck,
+  RotateCcw,
+  Send
 } from './Icons';
 
 type MainTab = 'function' | 'number' | 'apn';
@@ -93,7 +98,16 @@ const SimSettings: React.FC = () => {
   
   const [pendingAction, setPendingAction] = useState<{ type: ActionType; label: string } | null>(null);
   const [pinUnlockEnabled, setPinUnlockEnabled] = useState(false);
-  const [storageEnabled, setStorageEnabled] = useState(true);
+  const [isQuerying, setIsQuerying] = useState(false);
+  
+  // 号码常规设置状态
+  const [numSettings, setNumSettings] = useState({
+    storageEnabled: true,
+    autoClean: false,
+    cleanDays: 30,
+    verifyPrefix: true,
+    storageType: 'Local'
+  });
   
   // Selection States
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -167,6 +181,18 @@ const SimSettings: React.FC = () => {
     alert(`已执行: ${pendingAction?.label}`);
   };
 
+  const handleImmediateQuery = () => {
+    if (selectedQueryIds.length === 0) {
+      alert("请先选择需要查询的项");
+      return;
+    }
+    setIsQuerying(true);
+    setTimeout(() => {
+      setIsQuerying(false);
+      alert("指令已下发，请稍后刷新查看");
+    }, 1500);
+  };
+
   // 获取选中终端的名称列表用于编辑弹窗
   const selectedTerminalNames = useMemo(() => {
     return functionData
@@ -213,7 +239,7 @@ const SimSettings: React.FC = () => {
           {/* 1. 功能设置视图 */}
           {activeTab === 'function' && (
             <div className="flex-1 flex flex-col min-h-0 animate-in fade-in">
-                {/* 统一风格的工具栏 */}
+                {/* 工具栏 */}
                 <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
                     <div className="flex items-center gap-2">
                         <button 
@@ -322,9 +348,9 @@ const SimSettings: React.FC = () => {
             <div className="flex-1 flex flex-col overflow-hidden bg-slate-50/10">
                <div className="flex border-b border-slate-200 bg-slate-100/50">
                   {[
-                    { id: 'general', label: '常规设置' },
-                    { id: 'auto_query', label: '自动查询号码' },
                     { id: 'current_number', label: '当前SIM号码' },
+                    { id: 'auto_query', label: '自动查询号码' },
+                    { id: 'general', label: '常规设置' },
                   ].map(sub => (
                     <button
                       key={sub.id}
@@ -345,17 +371,39 @@ const SimSettings: React.FC = () => {
 
                <div className="flex-1 overflow-auto bg-white flex flex-col">
                   {numberSubTab === 'general' && (
-                    <div className="p-10 animate-in fade-in">
-                        <div className="flex items-center gap-12">
-                            <span className="text-sm font-bold text-slate-700">号码存储</span>
-                            <div className="flex items-center gap-3">
-                                <input 
-                                    type="checkbox" 
-                                    checked={storageEnabled}
-                                    onChange={(e) => setStorageEnabled(e.target.checked)}
-                                    className="w-6 h-6 rounded border-slate-300 text-primary-600 focus:ring-primary-500 cursor-pointer" 
-                                />
-                                <span className="text-xs font-medium text-slate-400">启用本地号码自动记录</span>
+                    <div className="p-12 animate-in fade-in flex flex-col items-center">
+                        <div className="w-full max-w-xl">
+                            {/* Updated General Settings content to match image: "号码存储" with a blue checkmark toggle */}
+                            <div className="bg-white rounded-3xl border border-slate-200 shadow-soft overflow-hidden">
+                                <div className="px-8 py-6 border-b border-slate-100 bg-slate-50/30 flex items-center gap-3">
+                                    <Settings2 className="w-5 h-5 text-primary-600" />
+                                    <h3 className="font-black text-slate-800 tracking-tight">常规设置</h3>
+                                </div>
+                                <div className="p-10">
+                                    <div className="flex items-center justify-between">
+                                        <div className="space-y-1">
+                                            <h4 className="text-lg font-black text-slate-800 tracking-tight">号码存储</h4>
+                                            <p className="text-sm text-slate-400 font-medium">配置是否自动存储与管理捕获到的 SIM 号码</p>
+                                        </div>
+                                        <button 
+                                            onClick={() => setNumSettings({...numSettings, storageEnabled: !numSettings.storageEnabled})}
+                                            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 transform active:scale-95 ${
+                                                numSettings.storageEnabled 
+                                                    ? 'bg-primary-600 shadow-lg shadow-primary-500/30' 
+                                                    : 'bg-slate-100 border-2 border-slate-200'
+                                            }`}
+                                        >
+                                            {numSettings.storageEnabled && <Check className="w-6 h-6 text-white" strokeWidth={4} />}
+                                        </button>
+                                    </div>
+                                    
+                                    <div className="mt-12 p-6 bg-blue-50/50 border border-blue-100 rounded-2xl flex items-start gap-4">
+                                        <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+                                        <p className="text-xs text-blue-700 leading-relaxed font-medium">
+                                            开启号码存储后，系统将自动在“当前SIM号码”中记录端口变更记录。您可以通过点击“号码管理”下的子标签页来查看已存储的数据。
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -368,7 +416,15 @@ const SimSettings: React.FC = () => {
                               onClick={() => setIsQueryEditModalOpen(true)} 
                               className="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 text-sm font-bold rounded-xl border border-slate-200 hover:border-primary-200 hover:text-primary-600 hover:shadow-sm transition-all active:scale-95 group"
                             >
-                                <Edit3 className="w-4 h-4 text-slate-400 group-hover:text-primary-500" /> 批量编辑
+                                <Edit3 className="w-4 h-4 text-slate-400 group-hover:text-primary-500" /> 编辑
+                            </button>
+                            <button 
+                              onClick={handleImmediateQuery}
+                              disabled={isQuerying}
+                              className="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 text-sm font-bold rounded-xl border border-slate-200 hover:border-indigo-200 hover:text-indigo-600 hover:shadow-sm transition-all active:scale-95 group"
+                            >
+                                {isQuerying ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4 text-slate-400 group-hover:text-indigo-500" />}
+                                立即查询
                             </button>
                         </div>
                         <div className="flex-1 overflow-auto">
@@ -388,7 +444,7 @@ const SimSettings: React.FC = () => {
                                 </thead>
                                 <tbody className="divide-y divide-slate-100">
                                     {autoQueryData.map(item => (
-                                        <tr key={item.id} className="hover:bg-slate-50/60 transition-all">
+                                        <tr key={item.id} className={`hover:bg-slate-50/60 transition-all ${selectedQueryIds.includes(item.id) ? 'bg-primary-50/30' : ''}`}>
                                             <td className="px-6 py-4 text-center">
                                                 <input type="checkbox" checked={selectedQueryIds.includes(item.id)} onChange={() => toggleSelectOne(item.id, selectedQueryIds, setSelectedQueryIds)} className="w-5 h-5 rounded border-slate-300 text-primary-600 focus:ring-primary-500 cursor-pointer" />
                                             </td>
@@ -409,15 +465,18 @@ const SimSettings: React.FC = () => {
                   {numberSubTab === 'current_number' && (
                     <div className="flex-1 flex flex-col min-h-0 animate-in fade-in">
                         <div className="p-4 border-b border-slate-100 flex items-center gap-2 bg-slate-50/30">
-                          <button className="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 text-sm font-bold rounded-xl border border-slate-200 hover:border-primary-200 hover:text-primary-600 hover:shadow-sm transition-all active:scale-95 group">
-                            <FileUp className="w-4 h-4 text-slate-400 group-hover:text-primary-500" /> 导入
-                          </button>
                           <button 
                             onClick={handleOpenSimEdit}
                             disabled={selectedSimIds.length !== 1}
                             className={`flex items-center gap-2 px-4 py-2 bg-white text-sm font-bold rounded-xl border transition-all active:scale-95 group ${selectedSimIds.length === 1 ? 'border-slate-200 text-slate-700 hover:border-primary-200 hover:text-primary-600 hover:shadow-sm' : 'border-slate-100 text-slate-300 cursor-not-allowed'}`}
                           >
                             <Edit3 className={`w-4 h-4 ${selectedSimIds.length === 1 ? 'text-slate-400 group-hover:text-primary-500' : 'text-slate-200'}`} /> 编辑
+                          </button>
+                          <button className="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 text-sm font-bold rounded-xl border border-slate-200 hover:border-primary-200 hover:text-primary-600 hover:shadow-sm transition-all active:scale-95 group">
+                            <FileUp className="w-4 h-4 text-slate-400 group-hover:text-primary-500" /> 导入
+                          </button>
+                          <button className="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 text-sm font-bold rounded-xl border border-slate-200 hover:border-primary-200 hover:text-primary-600 hover:shadow-sm transition-all active:scale-95 group">
+                            <FileDown className="w-4 h-4 text-slate-400 group-hover:text-primary-500" /> 导出
                           </button>
                           <button 
                             onClick={() => { if(confirm('确定要清空所有号码吗？')) setSelectedSimIds([]); }}
@@ -503,8 +562,144 @@ const SimSettings: React.FC = () => {
       </div>
 
       {/* 弹窗部分 */}
+
+      {/* 号码管理 -> 自动查询编辑弹窗 */}
+      {isQueryEditModalOpen && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md animate-in fade-in" onClick={() => setIsQueryEditModalOpen(false)}></div>
+            <div className="relative bg-white rounded-[2.5rem] shadow-2xl w-full max-w-2xl border border-white/60 animate-enter overflow-hidden flex flex-col max-h-[90vh]">
+                <div className="px-10 py-6 border-b border-slate-100 bg-slate-50/50 flex-none flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className="p-3 bg-primary-50 text-primary-600 rounded-2xl shadow-sm border border-primary-100">
+                            <Settings2 className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <h3 className="font-black text-slate-800 tracking-tight text-lg">编辑查询配置</h3>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Operator Query Configuration</p>
+                        </div>
+                    </div>
+                    <button onClick={() => setIsQueryEditModalOpen(false)} className="p-2 rounded-xl hover:bg-slate-200/50 text-slate-400 transition-colors">
+                        <X className="w-6 h-6" />
+                    </button>
+                </div>
+                
+                <div className="flex-1 overflow-y-auto p-10 space-y-8">
+                    {/* 运营商ID */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4 items-center">
+                        <label className="text-sm font-bold text-slate-600 md:text-right md:pr-4">运营商ID</label>
+                        <div className="md:col-span-3">
+                            <input 
+                                type="text"
+                                defaultValue="101"
+                                className="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 shadow-sm"
+                            />
+                        </div>
+                    </div>
+
+                    {/* 方法 */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4 items-start">
+                        <label className="text-sm font-bold text-slate-600 md:text-right md:pr-4 md:pt-3">方法</label>
+                        <div className="md:col-span-3 space-y-2">
+                            <div className="relative">
+                                <select className="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 appearance-none shadow-sm cursor-pointer">
+                                    <option value="AT">AT</option>
+                                    <option value="USSD">USSD获取</option>
+                                    <option value="SMS">短信获取</option>
+                                </select>
+                                <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                            </div>
+                            <p className="text-[11px] text-slate-400 font-medium px-1">
+                                有三种方法，包括USSD获取、短信获取和AT查询
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* 查询内容 */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4 items-center">
+                        <label className="text-sm font-bold text-slate-600 md:text-right md:pr-4">查询内容</label>
+                        <div className="md:col-span-3">
+                            <input 
+                                type="text"
+                                className="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 shadow-sm"
+                            />
+                        </div>
+                    </div>
+
+                    {/* 关键字 */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4 items-start">
+                        <label className="text-sm font-bold text-slate-600 md:text-right md:pr-4 md:pt-3">关键字</label>
+                        <div className="md:col-span-3 space-y-2">
+                            <input 
+                                type="text"
+                                className="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 shadow-sm"
+                            />
+                            <p className="text-[11px] text-slate-400 font-medium px-1 leading-relaxed">
+                                提取号码的关键字。比如,发送USSD查询号码之后，USSD返回响应：your SIM number 923123456,那么号码前面那个字number即为关键字
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* 服务号码 */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4 items-center">
+                        <label className="text-sm font-bold text-slate-600 md:text-right md:pr-4">服务号码</label>
+                        <div className="md:col-span-3">
+                            <input 
+                                type="text"
+                                className="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none shadow-sm"
+                            />
+                        </div>
+                    </div>
+
+                    {/* 接收号码 */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4 items-center">
+                        <label className="text-sm font-bold text-slate-600 md:text-right md:pr-4">接收号码</label>
+                        <div className="md:col-span-3">
+                            <input 
+                                type="text"
+                                className="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none shadow-sm"
+                            />
+                        </div>
+                    </div>
+
+                    {/* 被替换的前缀 */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4 items-start">
+                        <label className="text-sm font-bold text-slate-600 md:text-right md:pr-4 md:pt-3">被替换的前缀</label>
+                        <div className="md:col-span-3 space-y-2">
+                            <input 
+                                type="text"
+                                className="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 shadow-sm"
+                            />
+                            <p className="text-[11px] text-slate-400 font-medium px-1 leading-relaxed">
+                                进行号码前缀替换，实际得到的号码可能为923123456，其中923是国家代码并不需要，这时候可用号码前缀替换，923替换成0，得到最终号码为0123456
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* 替换后的前缀 */}
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4 items-start">
+                        <label className="text-sm font-bold text-slate-600 md:text-right md:pr-4 md:pt-3">替换后的前缀</label>
+                        <div className="md:col-span-3 space-y-2">
+                            <input 
+                                type="text"
+                                className="w-full px-5 py-3.5 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 shadow-sm"
+                            />
+                            <p className="text-[11px] text-slate-400 font-medium px-1 leading-relaxed">
+                                进行号码前缀替换，实际得到的号码可能为923123456，其中923是国家代码并不需要，这时候可用号码前缀替换，923替换成0，得到最终号码为0123456
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="px-10 py-8 bg-slate-50 border-t border-slate-100 flex justify-end gap-4 flex-none">
+                    <button onClick={() => setIsQueryEditModalOpen(false)} className="px-8 py-3 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors">取消</button>
+                    <button onClick={() => setIsQueryEditModalOpen(false)} className="btn-primary px-12 py-3 rounded-2xl text-sm font-black shadow-xl shadow-primary-500/20 active:scale-95 transition-all">保存配置</button>
+                </div>
+            </div>
+        </div>,
+        document.body
+      )}
       
-      {/* 功能设置 -> 批量编辑弹窗 (还原图片) */}
+      {/* 功能设置 -> 批量编辑弹窗 */}
       {isEditModalOpen && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm animate-in fade-in" onClick={() => setIsEditModalOpen(false)}></div>
@@ -521,7 +716,6 @@ const SimSettings: React.FC = () => {
                     </button>
                 </div>
                 <div className="flex-1 overflow-y-auto p-10 space-y-8">
-                    {/* 终端 */}
                     <div className="grid grid-cols-4 gap-4 items-start">
                         <label className="text-sm font-bold text-slate-600 text-right pr-4 pt-3">终端(模块-卡槽号)</label>
                         <div className="col-span-3">
@@ -533,8 +727,6 @@ const SimSettings: React.FC = () => {
                             />
                         </div>
                     </div>
-
-                    {/* 启用 */}
                     <div className="grid grid-cols-4 gap-4 items-center">
                         <label className="text-sm font-bold text-slate-600 text-right pr-4">启用</label>
                         <div className="col-span-3 relative">
@@ -542,11 +734,9 @@ const SimSettings: React.FC = () => {
                                 <option value="enable">启用</option>
                                 <option value="disable">禁用</option>
                             </select>
-                            <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                         </div>
                     </div>
-
-                    {/* 短信启用 */}
                     <div className="grid grid-cols-4 gap-4 items-center">
                         <label className="text-sm font-bold text-slate-600 text-right pr-4">短信启用</label>
                         <div className="col-span-3 relative">
@@ -554,11 +744,9 @@ const SimSettings: React.FC = () => {
                                 <option value="enable">启用</option>
                                 <option value="disable">禁用</option>
                             </select>
-                            <ChevronDown className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                         </div>
                     </div>
-
-                    {/* 锁定运营商 */}
                     <div className="grid grid-cols-4 gap-4 items-start">
                         <label className="text-sm font-bold text-slate-600 text-right pr-4 pt-3">锁定运营商</label>
                         <div className="col-span-3 space-y-2">
@@ -571,8 +759,6 @@ const SimSettings: React.FC = () => {
                             </p>
                         </div>
                     </div>
-
-                    {/* 余额 */}
                     <div className="grid grid-cols-4 gap-4 items-center">
                         <label className="text-sm font-bold text-slate-600 text-right pr-4">余额</label>
                         <div className="col-span-3">
@@ -582,8 +768,6 @@ const SimSettings: React.FC = () => {
                             />
                         </div>
                     </div>
-
-                    {/* PIN码 */}
                     <div className="grid grid-cols-4 gap-4 items-center">
                         <label className="text-sm font-bold text-slate-600 text-right pr-4">PIN码</label>
                         <div className="col-span-3">
@@ -593,8 +777,6 @@ const SimSettings: React.FC = () => {
                             />
                         </div>
                     </div>
-
-                    {/* 短信中心号码 */}
                     <div className="grid grid-cols-4 gap-4 items-center">
                         <label className="text-sm font-bold text-slate-600 text-right pr-4">短信中心号码</label>
                         <div className="col-span-3">
@@ -709,7 +891,7 @@ const SimSettings: React.FC = () => {
                       </div>
                     ))}
                 </div>
-                <div className="px-10 py-8 bg-slate-50 border-t border-slate-100 flex justify-end gap-4">
+                <div className="px-10 py-8 bg-slate-50 border-t border-slate-100 flex justify-end gap-4 flex-none">
                     <button onClick={() => setIsApnEditModalOpen(false)} className="px-6 py-3 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors">放弃</button>
                     <button onClick={() => setIsApnEditModalOpen(false)} className="btn-primary px-12 py-3 rounded-2xl text-sm font-black shadow-xl shadow-primary-500/20 active:scale-95 transition-all">应用更改</button>
                 </div>
