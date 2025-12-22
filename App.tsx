@@ -15,6 +15,8 @@ import SystemTools from './components/SystemTools';
 import SystemReboot from './components/SystemReboot';
 import SimStatus from './components/SimStatus';
 import SimSettings from './components/SimSettings';
+import SimBalance from './components/SimBalance';
+import CardSwitchPolicy from './components/CardSwitchPolicy';
 import { 
   Menu, 
   Bell, 
@@ -180,6 +182,8 @@ const App: React.FC = () => {
           <Route path="/gateway/config" element={<GatewaySettings />} />
           <Route path="/sim/status" element={<SimStatus />} />
           <Route path="/sim/settings" element={<SimSettings />} />
+          <Route path="/sim/balance" element={<SimBalance />} />
+          <Route path="/policy/switch" element={<CardSwitchPolicy />} />
           <Route path="/device/*" element={<Placeholder title="设备管理" />} />
           <Route path="/gateway/*" element={<Placeholder title="网关设置" />} />
           <Route path="/sim/*" element={<Placeholder title="SIM卡管理" />} />
