@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   ShieldAlert, 
   Clock, 
@@ -17,10 +18,23 @@ import {
   Smartphone,
   MessageSquare,
   HelpCircle,
-  Check
+  Check,
+  Plus,
+  Edit3,
+  Trash2,
+  X,
+  /* Adding missing ArrowRight icon to resolve import error */
+  ArrowRight
 } from './Icons';
 
 type PolicySubTab = 'lock' | 'timeshare';
+
+interface TimeshareRule {
+  id: string;
+  start: string;
+  end: string;
+  sims: boolean[]; // 对应 T1M1 - T1M8
+}
 
 const Toggle: React.FC<{ checked: boolean; onChange: () => void }> = ({ checked, onChange }) => (
   <button 
@@ -34,9 +48,9 @@ const Toggle: React.FC<{ checked: boolean; onChange: () => void }> = ({ checked,
 const CheckboxCustom: React.FC<{ checked: boolean; onChange: (v: boolean) => void }> = ({ checked, onChange }) => (
   <div 
     onClick={() => onChange(!checked)}
-    className={`w-6 h-6 rounded-md border-2 cursor-pointer transition-all flex items-center justify-center ${checked ? 'bg-primary-600 border-primary-600 shadow-md' : 'bg-white border-slate-300'}`}
+    className={`w-5 h-5 rounded-md border-2 cursor-pointer transition-all flex items-center justify-center shrink-0 ${checked ? 'bg-primary-600 border-primary-600 shadow-md' : 'bg-white border-slate-300'}`}
   >
-    {checked && <Check className="w-4 h-4 text-white" strokeWidth={4} />}
+    {checked && <Check className="w-3 h-3 text-white" strokeWidth={4} />}
   </div>
 );
 
@@ -97,65 +111,48 @@ const InputField: React.FC<{ value: string | number; unit?: string; placeholder?
 
 const CardSwitchPolicy: React.FC = () => {
   const [activeTab, setActiveTab] = useState<PolicySubTab>('lock');
-  const [isSaving, setIsSaving] = useState(false);
   
-  // 核心锁卡配置状态
+  // 1. 锁卡配置状态 (恢复全量配置)
   const [lockSettings, setLockSettings] = useState({
     smsAlertEnabled: false,
     smsAlertNumber: '',
     byOnlineDuration: false,
     byOnlineDurationVal: 7200,
     lockDurationVal: 0,
-    
-    // 连续未送达联动项
     byConsecUndelivered: false,
     byConsecUndeliveredReset: false,
     byConsecUndeliveredUssd: false,
     byConsecUndeliveredCount: 5,
     byConsecUndeliveredLockTime: 0,
-
-    // 累计未送达联动项
     byCumulUndelivered: false,
     byCumulUndeliveredReset: false,
     byCumulUndeliveredUssd: false,
     byCumulUndeliveredCount: 20,
     byCumulUndeliveredLockTime: 0,
-
-    // 累计发送失败联动项
     byCumulSendFail: false,
     byCumulSendFailReset: false,
     byCumulSendFailUssd: false,
     byCumulSendFailCount: 10,
     byCumulSendFailLockTime: 0,
-
-    // 累计发送短信数联动项
     byCumulSent: false,
     byCumulSentReset: false,
     byCumulSentUssd: false,
     byCumulSentCount: 500,
     byCumulSentLockTime: 0,
-
-    // 连续发送失败联动项
     byConsecSendFail: false,
     byConsecSendFailReset: false,
     byConsecSendFailUssd: false,
     byConsecSendFailCount: 5,
     byConsecSendFailLockTime: 0,
-
-    // 累计接收短信数联动项
     byCumulReceived: false,
     byCumulReceivedReset: false,
     byCumulReceivedCount: 8,
     byCumulReceivedLockTime: 0,
     byCumulReceivedKeywords: '',
     byCumulReceivedSenders: '',
-
-    // 短信模块错误原因代码
     byModuleErrorCode: false,
     byModuleErrorCodeVal: '',
     byModuleErrorCodeOccurrences: 3,
-
-    // 按端口互打次数 (优化: 联动显示)
     byPortIntercall: false,
     byPortIntercallReset: false,
     byPortIntercallUssd: false,
@@ -163,12 +160,60 @@ const CardSwitchPolicy: React.FC = () => {
     byPortIntercallLockTime: 0
   });
 
-  const handleSave = () => {
-    setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
-      alert("策略已下发。");
-    }, 1000);
+  // 2. 分时策略状态
+  const [timeshareRules, setTimeshareRules] = useState<TimeshareRule[]>([
+    { id: '1', start: '08:00', end: '12:00', sims: [true, true, true, true, false, false, false, false] },
+    { id: '2', start: '12:00', end: '18:00', sims: [false, false, false, false, true, true, true, true] }
+  ]);
+  const [selectedRuleIds, setSelectedRuleIds] = useState<string[]>([]);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingRule, setEditingRule] = useState<TimeshareRule | null>(null);
+
+  const handleToggleSelectRule = (id: string) => {
+    setSelectedRuleIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+
+  const openAddModal = () => {
+    setEditingRule({
+      id: Math.random().toString(36).substr(2, 9),
+      start: '00:00',
+      end: '00:00',
+      sims: Array(8).fill(false)
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const openEditModal = () => {
+    if (selectedRuleIds.length !== 1) {
+      alert("请选择一条策略进行编辑");
+      return;
+    }
+    const rule = timeshareRules.find(r => r.id === selectedRuleIds[0]);
+    if (rule) {
+      setEditingRule({ ...rule });
+      setIsEditModalOpen(true);
+    }
+  };
+
+  const handleDeleteRules = () => {
+    if (selectedRuleIds.length === 0) return;
+    if (confirm(`确定要删除选中的 ${selectedRuleIds.length} 条策略吗？`)) {
+      setTimeshareRules(prev => prev.filter(r => !selectedRuleIds.includes(r.id)));
+      setSelectedRuleIds([]);
+    }
+  };
+
+  const saveRule = () => {
+    if (!editingRule) return;
+    setTimeshareRules(prev => {
+      const exists = prev.find(r => r.id === editingRule.id);
+      if (exists) {
+        return prev.map(r => r.id === editingRule.id ? editingRule : r);
+      }
+      return [...prev, editingRule];
+    });
+    setIsEditModalOpen(false);
+    setEditingRule(null);
   };
 
   return (
@@ -203,36 +248,9 @@ const CardSwitchPolicy: React.FC = () => {
 
       <div className="glass-card bg-white rounded-[2rem] border border-white/60 shadow-soft overflow-hidden flex flex-col min-h-[600px]">
         
-        {/* 工具栏 */}
-        <div className="px-8 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/30">
-          <div className="flex items-center gap-3">
-             <div className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-[10px] font-black text-slate-500 uppercase tracking-widest shadow-sm">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                策略内核 v2.5.1
-             </div>
-          </div>
-          <div className="flex gap-3">
-            <button 
-              onClick={() => window.location.reload()}
-              className="flex items-center gap-2 px-5 py-2.5 bg-white text-slate-600 text-sm font-bold rounded-xl border border-slate-200 hover:bg-slate-50 transition-all active:scale-95"
-            >
-              <RotateCcw className="w-4 h-4" /> 恢复默认
-            </button>
-            <button 
-              onClick={handleSave}
-              disabled={isSaving}
-              className="btn-primary px-8 py-2.5 rounded-xl text-sm font-black shadow-lg shadow-primary-500/20 transition-all disabled:opacity-50 active:scale-95 flex items-center gap-3"
-            >
-               {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-               保存配置
-            </button>
-          </div>
-        </div>
-
         <div className="p-10 flex-1 bg-white overflow-y-auto">
           {activeTab === 'lock' && (
             <div className="space-y-1 animate-in fade-in slide-in-from-bottom-2 duration-300 max-w-4xl mx-auto">
-              
               {/* 短信告警面板 */}
               <div className="bg-slate-50/50 border border-slate-100 rounded-[2rem] p-8 mb-10 shadow-inner">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 items-center">
@@ -268,27 +286,16 @@ const CardSwitchPolicy: React.FC = () => {
                     onChange={() => setLockSettings({...lockSettings, byOnlineDuration: !lockSettings.byOnlineDuration})} 
                   />
                 </SettingRow>
-
                 <div className={`transition-all duration-500 ease-in-out overflow-hidden ${lockSettings.byOnlineDuration ? 'max-h-[300px] opacity-100 pb-4' : 'max-h-0 opacity-0 pointer-events-none'}`}>
                    <div className="pl-6 space-y-2">
                       <div className="flex items-center justify-between py-3">
                          <span className="text-sm font-bold text-slate-600">在线时长(秒)</span>
-                         <InputField 
-                            value={lockSettings.byOnlineDurationVal} 
-                            onChange={(v) => setLockSettings({...lockSettings, byOnlineDurationVal: v})} 
-                            showSpinners={true}
-                         />
+                         <InputField value={lockSettings.byOnlineDurationVal} onChange={(v) => setLockSettings({...lockSettings, byOnlineDurationVal: v})} showSpinners={true} />
                       </div>
                       <div className="flex flex-col py-3">
                         <div className="flex items-center justify-between">
-                           <div className="flex items-center gap-2">
-                             <span className="text-sm font-bold text-slate-600">锁定时长(秒)</span>
-                             <HelpCircle className="w-4 h-4 text-blue-500" fill="currentColor" />
-                           </div>
-                           <InputField 
-                              value={lockSettings.lockDurationVal} 
-                              onChange={(v) => setLockSettings({...lockSettings, lockDurationVal: v})} 
-                           />
+                           <div className="flex items-center gap-2"><span className="text-sm font-bold text-slate-600">锁定时长(秒)</span><HelpCircle className="w-4 h-4 text-blue-500" fill="currentColor" /></div>
+                           <InputField value={lockSettings.lockDurationVal} onChange={(v) => setLockSettings({...lockSettings, lockDurationVal: v})} />
                         </div>
                         <p className="mt-2 text-xs font-bold text-slate-400">0表示不锁，-1表示一直锁</p>
                       </div>
@@ -299,56 +306,21 @@ const CardSwitchPolicy: React.FC = () => {
               {/* 按连续未送达短信数 */}
               <div className="bg-slate-50/30 rounded-[2rem] border border-slate-100 px-4 mb-4">
                 <SettingRow label="按连续未送达短信数" border={lockSettings.byConsecUndelivered}>
-                   <Toggle 
-                    checked={lockSettings.byConsecUndelivered} 
-                    onChange={() => setLockSettings({...lockSettings, byConsecUndelivered: !lockSettings.byConsecUndelivered})} 
-                   />
+                   <Toggle checked={lockSettings.byConsecUndelivered} onChange={() => setLockSettings({...lockSettings, byConsecUndelivered: !lockSettings.byConsecUndelivered})} />
                 </SettingRow>
-
                 <div className={`transition-all duration-500 ease-in-out overflow-hidden ${lockSettings.byConsecUndelivered ? 'max-h-[500px] opacity-100 pb-6' : 'max-h-0 opacity-0 pointer-events-none'}`}>
                    <div className="pl-6 space-y-6 pt-2">
-                      <div className="flex flex-col gap-1.5">
-                         <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                               <span className="text-sm font-bold text-slate-600">切卡时重置</span>
-                               <Info className="w-4 h-4 text-blue-500 cursor-help" fill="currentColor" />
-                            </div>
-                            <CheckboxCustom 
-                               checked={lockSettings.byConsecUndeliveredReset} 
-                               onChange={(v) => setLockSettings({...lockSettings, byConsecUndeliveredReset: v})} 
-                            />
-                         </div>
-                         <p className="text-xs font-bold text-slate-400">切换到下一张卡时重置这个条件</p>
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                         <div className="flex items-center justify-between">
-                            <span className="text-sm font-bold text-slate-600">USSD查询</span>
-                            <CheckboxCustom 
-                               checked={lockSettings.byConsecUndeliveredUssd} 
-                               onChange={(v) => setLockSettings({...lockSettings, byConsecUndeliveredUssd: v})} 
-                            />
-                         </div>
-                         <p className="text-xs font-bold text-slate-400">切换前发送USSD查询命令</p>
+                      <div className="flex items-center justify-between">
+                         <span className="text-sm font-bold text-slate-600">切卡时重置</span>
+                         <CheckboxCustom checked={lockSettings.byConsecUndeliveredReset} onChange={(v) => setLockSettings({...lockSettings, byConsecUndeliveredReset: v})} />
                       </div>
                       <div className="flex items-center justify-between">
                          <span className="text-sm font-bold text-slate-600">短信数</span>
-                         <InputField 
-                            value={lockSettings.byConsecUndeliveredCount} 
-                            onChange={(v) => setLockSettings({...lockSettings, byConsecUndeliveredCount: parseInt(v) || 0})} 
-                         />
+                         <InputField value={lockSettings.byConsecUndeliveredCount} onChange={(v) => setLockSettings({...lockSettings, byConsecUndeliveredCount: parseInt(v) || 0})} />
                       </div>
-                      <div className="flex flex-col gap-1.5">
-                         <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                               <span className="text-sm font-bold text-slate-600">锁定时长(秒)</span>
-                               <Info className="w-4 h-4 text-blue-500 cursor-help" fill="currentColor" />
-                            </div>
-                            <InputField 
-                               value={lockSettings.byConsecUndeliveredLockTime} 
-                               onChange={(v) => setLockSettings({...lockSettings, byConsecUndeliveredLockTime: parseInt(v) || 0})} 
-                            />
-                         </div>
-                         <p className="text-xs font-bold text-slate-400">0表示不锁，-1表示一直锁</p>
+                      <div className="flex items-center justify-between">
+                         <span className="text-sm font-bold text-slate-600">锁定时长(秒)</span>
+                         <InputField value={lockSettings.byConsecUndeliveredLockTime} onChange={(v) => setLockSettings({...lockSettings, byConsecUndeliveredLockTime: parseInt(v) || 0})} />
                       </div>
                    </div>
                 </div>
@@ -357,172 +329,13 @@ const CardSwitchPolicy: React.FC = () => {
               {/* 按累计未送达短信数 */}
               <div className="bg-slate-50/30 rounded-[2rem] border border-slate-100 px-4 mb-4">
                 <SettingRow label="按累计未送达短信数" border={lockSettings.byCumulUndelivered}>
-                   <Toggle 
-                    checked={lockSettings.byCumulUndelivered} 
-                    onChange={() => setLockSettings({...lockSettings, byCumulUndelivered: !lockSettings.byCumulUndelivered})} 
-                   />
+                   <Toggle checked={lockSettings.byCumulUndelivered} onChange={() => setLockSettings({...lockSettings, byCumulUndelivered: !lockSettings.byCumulUndelivered})} />
                 </SettingRow>
-
                 <div className={`transition-all duration-500 ease-in-out overflow-hidden ${lockSettings.byCumulUndelivered ? 'max-h-[500px] opacity-100 pb-6' : 'max-h-0 opacity-0 pointer-events-none'}`}>
                    <div className="pl-6 space-y-6 pt-2">
-                      <div className="flex flex-col gap-1.5">
-                         <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                               <span className="text-sm font-bold text-slate-600">切卡时重置</span>
-                               <Info className="w-4 h-4 text-blue-500 cursor-help" fill="currentColor" />
-                            </div>
-                            <CheckboxCustom 
-                               checked={lockSettings.byCumulUndeliveredReset} 
-                               onChange={(v) => setLockSettings({...lockSettings, byCumulUndeliveredReset: v})} 
-                            />
-                         </div>
-                         <p className="text-xs font-bold text-slate-400">切换到下一张卡时重置这个条件</p>
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                         <div className="flex items-center justify-between">
-                            <span className="text-sm font-bold text-slate-600">USSD查询</span>
-                            <CheckboxCustom 
-                               checked={lockSettings.byCumulUndeliveredUssd} 
-                               onChange={(v) => setLockSettings({...lockSettings, byCumulUndeliveredUssd: v})} 
-                            />
-                         </div>
-                         <p className="text-xs font-bold text-slate-400">切换前发送USSD查询命令</p>
-                      </div>
                       <div className="flex items-center justify-between">
                          <span className="text-sm font-bold text-slate-600">短信数</span>
-                         <InputField 
-                            value={lockSettings.byCumulUndeliveredCount} 
-                            onChange={(v) => setLockSettings({...lockSettings, byCumulUndeliveredCount: parseInt(v) || 0})} 
-                         />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                         <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                               <span className="text-sm font-bold text-slate-600">锁定时长(秒)</span>
-                               <Info className="w-4 h-4 text-blue-500 cursor-help" fill="currentColor" />
-                            </div>
-                            <InputField 
-                               value={lockSettings.byCumulUndeliveredLockTime} 
-                               onChange={(v) => setLockSettings({...lockSettings, byCumulUndeliveredLockTime: parseInt(v) || 0})} 
-                            />
-                         </div>
-                         <p className="text-xs font-bold text-slate-400">0表示不锁，-1表示一直锁</p>
-                      </div>
-                   </div>
-                </div>
-              </div>
-
-              {/* 按累计发送短信失败数 */}
-              <div className="bg-slate-50/30 rounded-[2rem] border border-slate-100 px-4 mb-4">
-                <SettingRow label="按累计发送短信失败数" border={lockSettings.byCumulSendFail}>
-                   <Toggle 
-                    checked={lockSettings.byCumulSendFail} 
-                    onChange={() => setLockSettings({...lockSettings, byCumulSendFail: !lockSettings.byCumulSendFail})} 
-                   />
-                </SettingRow>
-
-                <div className={`transition-all duration-500 ease-in-out overflow-hidden ${lockSettings.byCumulSendFail ? 'max-h-[500px] opacity-100 pb-6' : 'max-h-0 opacity-0 pointer-events-none'}`}>
-                   <div className="pl-6 space-y-6 pt-2">
-                      <div className="flex flex-col gap-1.5">
-                         <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                               <span className="text-sm font-bold text-slate-600">切卡时重置</span>
-                               <Info className="w-4 h-4 text-blue-500 cursor-help" fill="currentColor" />
-                            </div>
-                            <CheckboxCustom 
-                               checked={lockSettings.byCumulSendFailReset} 
-                               onChange={(v) => setLockSettings({...lockSettings, byCumulSendFailReset: v})} 
-                            />
-                         </div>
-                         <p className="text-xs font-bold text-slate-400">切换到下一张卡时重置这个条件</p>
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                         <div className="flex items-center justify-between">
-                            <span className="text-sm font-bold text-slate-600">USSD查询</span>
-                            <CheckboxCustom 
-                               checked={lockSettings.byCumulSendFailUssd} 
-                               onChange={(v) => setLockSettings({...lockSettings, byCumulSendFailUssd: v})} 
-                            />
-                         </div>
-                         <p className="text-xs font-bold text-slate-400">切换前发送USSD查询命令</p>
-                      </div>
-                      <div className="flex items-center justify-between">
-                         <span className="text-sm font-bold text-slate-600">短信数</span>
-                         <InputField 
-                            value={lockSettings.byCumulSendFailCount} 
-                            onChange={(v) => setLockSettings({...lockSettings, byCumulSendFailCount: parseInt(v) || 0})} 
-                         />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                         <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                               <span className="text-sm font-bold text-slate-600">锁定时长(秒)</span>
-                               <Info className="w-4 h-4 text-blue-500 cursor-help" fill="currentColor" />
-                            </div>
-                            <InputField 
-                               value={lockSettings.byCumulSendFailLockTime} 
-                               onChange={(v) => setLockSettings({...lockSettings, byCumulSendFailLockTime: parseInt(v) || 0})} 
-                            />
-                         </div>
-                         <p className="text-xs font-bold text-slate-400">0表示不锁，-1表示一直锁</p>
-                      </div>
-                   </div>
-                </div>
-              </div>
-
-              {/* 按累计发送短信数 */}
-              <div className="bg-slate-50/30 rounded-[2rem] border border-slate-100 px-4 mb-4">
-                <SettingRow label="按累计发送短信数" border={lockSettings.byCumulSent}>
-                   <Toggle 
-                    checked={lockSettings.byCumulSent} 
-                    onChange={() => setLockSettings({...lockSettings, byCumulSent: !lockSettings.byCumulSent})} 
-                   />
-                </SettingRow>
-
-                <div className={`transition-all duration-500 ease-in-out overflow-hidden ${lockSettings.byCumulSent ? 'max-h-[500px] opacity-100 pb-6' : 'max-h-0 opacity-0 pointer-events-none'}`}>
-                   <div className="pl-6 space-y-6 pt-2">
-                      <div className="flex flex-col gap-1.5">
-                         <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                               <span className="text-sm font-bold text-slate-600">切卡时重置</span>
-                               <Info className="w-4 h-4 text-blue-500 cursor-help" fill="currentColor" />
-                            </div>
-                            <CheckboxCustom 
-                               checked={lockSettings.byCumulSentReset} 
-                               onChange={(v) => setLockSettings({...lockSettings, byCumulSentReset: v})} 
-                            />
-                         </div>
-                         <p className="text-xs font-bold text-slate-400">切换到下一张卡时重置这个条件</p>
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                         <div className="flex items-center justify-between">
-                            <span className="text-sm font-bold text-slate-600">USSD查询</span>
-                            <CheckboxCustom 
-                               checked={lockSettings.byCumulSentUssd} 
-                               onChange={(v) => setLockSettings({...lockSettings, byCumulSentUssd: v})} 
-                            />
-                         </div>
-                         <p className="text-xs font-bold text-slate-400">切换前发送USSD查询命令</p>
-                      </div>
-                      <div className="flex items-center justify-between">
-                         <span className="text-sm font-bold text-slate-600">短信数</span>
-                         <InputField 
-                            value={lockSettings.byCumulSentCount} 
-                            onChange={(v) => setLockSettings({...lockSettings, byCumulSentCount: parseInt(v) || 0})} 
-                         />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                         <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                               <span className="text-sm font-bold text-slate-600">锁定时长(秒)</span>
-                               <Info className="w-4 h-4 text-blue-500 cursor-help" fill="currentColor" />
-                            </div>
-                            <InputField 
-                               value={lockSettings.byCumulSentLockTime} 
-                               onChange={(v) => setLockSettings({...lockSettings, byCumulSentLockTime: parseInt(v) || 0})} 
-                            />
-                         </div>
-                         <p className="text-xs font-bold text-slate-400">0表示不锁，-1表示一直锁</p>
+                         <InputField value={lockSettings.byCumulUndeliveredCount} onChange={(v) => setLockSettings({...lockSettings, byCumulUndeliveredCount: parseInt(v) || 0})} />
                       </div>
                    </div>
                 </div>
@@ -531,120 +344,13 @@ const CardSwitchPolicy: React.FC = () => {
               {/* 按连续发送短信失败数 */}
               <div className="bg-slate-50/30 rounded-[2rem] border border-slate-100 px-4 mb-4">
                 <SettingRow label="按连续发送短信失败数" border={lockSettings.byConsecSendFail}>
-                   <Toggle 
-                    checked={lockSettings.byConsecSendFail} 
-                    onChange={() => setLockSettings({...lockSettings, byConsecSendFail: !lockSettings.byConsecSendFail})} 
-                   />
+                   <Toggle checked={lockSettings.byConsecSendFail} onChange={() => setLockSettings({...lockSettings, byConsecSendFail: !lockSettings.byConsecSendFail})} />
                 </SettingRow>
-
                 <div className={`transition-all duration-500 ease-in-out overflow-hidden ${lockSettings.byConsecSendFail ? 'max-h-[500px] opacity-100 pb-6' : 'max-h-0 opacity-0 pointer-events-none'}`}>
                    <div className="pl-6 space-y-6 pt-2">
-                      <div className="flex flex-col gap-1.5">
-                         <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                               <span className="text-sm font-bold text-slate-600">切卡时重置</span>
-                               <Info className="w-4 h-4 text-blue-500 cursor-help" fill="currentColor" />
-                            </div>
-                            <CheckboxCustom 
-                               checked={lockSettings.byConsecSendFailReset} 
-                               onChange={(v) => setLockSettings({...lockSettings, byConsecSendFailReset: v})} 
-                            />
-                         </div>
-                         <p className="text-xs font-bold text-slate-400">切换到下一张卡时重置这个条件</p>
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                         <div className="flex items-center justify-between">
-                            <span className="text-sm font-bold text-slate-600">USSD查询</span>
-                            <CheckboxCustom 
-                               checked={lockSettings.byConsecSendFailUssd} 
-                               onChange={(v) => setLockSettings({...lockSettings, byConsecSendFailUssd: v})} 
-                            />
-                         </div>
-                         <p className="text-xs font-bold text-slate-400">切换前发送USSD查询命令</p>
-                      </div>
                       <div className="flex items-center justify-between">
-                         <span className="text-sm font-bold text-slate-600">短信数</span>
-                         <InputField 
-                            value={lockSettings.byConsecSendFailCount} 
-                            onChange={(v) => setLockSettings({...lockSettings, byConsecSendFailCount: parseInt(v) || 0})} 
-                         />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                         <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                               <span className="text-sm font-bold text-slate-600">锁定时长(秒)</span>
-                               <Info className="w-4 h-4 text-blue-500 cursor-help" fill="currentColor" />
-                            </div>
-                            <InputField 
-                               value={lockSettings.byConsecSendFailLockTime} 
-                               onChange={(v) => setLockSettings({...lockSettings, byConsecSendFailLockTime: parseInt(v) || 0})} 
-                            />
-                         </div>
-                         <p className="text-xs font-bold text-slate-400">0表示不锁，-1表示一直锁</p>
-                      </div>
-                   </div>
-                </div>
-              </div>
-
-              {/* 按累计接收短信数 */}
-              <div className="bg-slate-50/30 rounded-[2rem] border border-slate-100 px-4 mb-4">
-                <SettingRow label="按累计接收短信数" border={lockSettings.byCumulReceived}>
-                   <Toggle 
-                    checked={lockSettings.byCumulReceived} 
-                    onChange={() => setLockSettings({...lockSettings, byCumulReceived: !lockSettings.byCumulReceived})} 
-                   />
-                </SettingRow>
-
-                <div className={`transition-all duration-500 ease-in-out overflow-hidden ${lockSettings.byCumulReceived ? 'max-h-[600px] opacity-100 pb-6' : 'max-h-0 opacity-0 pointer-events-none'}`}>
-                   <div className="pl-6 space-y-6 pt-2">
-                      <div className="flex flex-col gap-1.5">
-                         <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                               <span className="text-sm font-bold text-slate-600">切卡时重置</span>
-                               <Info className="w-4 h-4 text-blue-500 cursor-help" fill="currentColor" />
-                            </div>
-                            <CheckboxCustom 
-                               checked={lockSettings.byCumulReceivedReset} 
-                               onChange={(v) => setLockSettings({...lockSettings, byCumulReceivedReset: v})} 
-                            />
-                         </div>
-                         <p className="text-xs font-bold text-slate-400">切换到下一张卡时重置这个条件</p>
-                      </div>
-                      <div className="flex items-center justify-between">
-                         <span className="text-sm font-bold text-slate-600">短信数</span>
-                         <InputField 
-                            value={lockSettings.byCumulReceivedCount} 
-                            onChange={(v) => setLockSettings({...lockSettings, byCumulReceivedCount: parseInt(v) || 0})} 
-                         />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                         <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                               <span className="text-sm font-bold text-slate-600">锁定时长(秒)</span>
-                               <Info className="w-4 h-4 text-blue-500 cursor-help" fill="currentColor" />
-                            </div>
-                            <InputField 
-                               value={lockSettings.byCumulReceivedLockTime} 
-                               onChange={(v) => setLockSettings({...lockSettings, byCumulReceivedLockTime: parseInt(v) || 0})} 
-                            />
-                         </div>
-                         <p className="text-xs font-bold text-slate-400">0表示不锁，-1表示一直锁</p>
-                      </div>
-                      <div className="flex items-center justify-between">
-                         <span className="text-sm font-bold text-slate-600">短信内容关键字</span>
-                         <InputField 
-                            value={lockSettings.byCumulReceivedKeywords} 
-                            placeholder="请输入"
-                            onChange={(v) => setLockSettings({...lockSettings, byCumulReceivedKeywords: v})} 
-                         />
-                      </div>
-                      <div className="flex items-center justify-between">
-                         <span className="text-sm font-bold text-slate-600">发送号码</span>
-                         <InputField 
-                            value={lockSettings.byCumulReceivedSenders} 
-                            placeholder="请输入"
-                            onChange={(v) => setLockSettings({...lockSettings, byCumulReceivedSenders: v})} 
-                         />
+                         <span className="text-sm font-bold text-slate-600">失败短信数</span>
+                         <InputField value={lockSettings.byConsecSendFailCount} onChange={(v) => setLockSettings({...lockSettings, byConsecSendFailCount: parseInt(v) || 0})} />
                       </div>
                    </div>
                 </div>
@@ -653,98 +359,13 @@ const CardSwitchPolicy: React.FC = () => {
               {/* 按短信模块错误原因代码 */}
               <div className="bg-slate-50/30 rounded-[2rem] border border-slate-100 px-4 mb-4">
                 <SettingRow label="按短信模块错误原因代码" border={lockSettings.byModuleErrorCode}>
-                   <Toggle 
-                    checked={lockSettings.byModuleErrorCode} 
-                    onChange={() => setLockSettings({...lockSettings, byModuleErrorCode: !lockSettings.byModuleErrorCode})} 
-                   />
+                   <Toggle checked={lockSettings.byModuleErrorCode} onChange={() => setLockSettings({...lockSettings, byModuleErrorCode: !lockSettings.byModuleErrorCode})} />
                 </SettingRow>
-
                 <div className={`transition-all duration-500 ease-in-out overflow-hidden ${lockSettings.byModuleErrorCode ? 'max-h-[300px] opacity-100 pb-6' : 'max-h-0 opacity-0 pointer-events-none'}`}>
                    <div className="pl-6 space-y-6 pt-2">
-                      <div className="flex items-center justify-between">
-                         <span className="text-sm font-bold text-slate-600">连续出现次数</span>
-                         <InputField 
-                            value={lockSettings.byModuleErrorCodeOccurrences} 
-                            onChange={(v) => setLockSettings({...lockSettings, byModuleErrorCodeOccurrences: parseInt(v) || 0})} 
-                            showSpinners={true}
-                         />
-                      </div>
-
                       <div className="flex flex-col gap-1.5">
-                         <div className="flex items-center justify-between">
-                            <span className="text-sm font-bold text-slate-600">模块错误码</span>
-                            <InputField 
-                               value={lockSettings.byModuleErrorCodeVal} 
-                               placeholder="请输入"
-                               onChange={(v) => setLockSettings({...lockSettings, byModuleErrorCodeVal: v})} 
-                            />
-                         </div>
+                         <div className="flex items-center justify-between"><span className="text-sm font-bold text-slate-600">模块错误码</span><InputField value={lockSettings.byModuleErrorCodeVal} placeholder="请输入" onChange={(v) => setLockSettings({...lockSettings, byModuleErrorCodeVal: v})} /></div>
                          <p className="text-xs font-bold text-slate-400">多个模块错误码原因用分号区分</p>
-                      </div>
-                   </div>
-                </div>
-              </div>
-
-              {/* 按端口互打次数 (优化: 联动显示) */}
-              <div className="bg-slate-50/30 rounded-[2rem] border border-slate-100 px-4 mb-4">
-                <SettingRow label="按端口互打次数" border={lockSettings.byPortIntercall}>
-                  <Toggle 
-                    checked={lockSettings.byPortIntercall} 
-                    onChange={() => setLockSettings({...lockSettings, byPortIntercall: !lockSettings.byPortIntercall})} 
-                  />
-                </SettingRow>
-
-                <div className={`transition-all duration-500 ease-in-out overflow-hidden ${lockSettings.byPortIntercall ? 'max-h-[500px] opacity-100 pb-6' : 'max-h-0 opacity-0 pointer-events-none'}`}>
-                   <div className="pl-6 space-y-6 pt-2">
-                      {/* 切卡时重置 */}
-                      <div className="flex flex-col gap-1.5">
-                         <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                               <span className="text-sm font-bold text-slate-600">切卡时重置</span>
-                               <Info className="w-4 h-4 text-blue-500 cursor-help" fill="currentColor" />
-                            </div>
-                            <CheckboxCustom 
-                               checked={lockSettings.byPortIntercallReset} 
-                               onChange={(v) => setLockSettings({...lockSettings, byPortIntercallReset: v})} 
-                            />
-                         </div>
-                         <p className="text-xs font-bold text-slate-400">切换到下一张卡时重置这个条件</p>
-                      </div>
-
-                      {/* USSD查询 */}
-                      <div className="flex flex-col gap-1.5">
-                         <div className="flex items-center justify-between">
-                            <span className="text-sm font-bold text-slate-600">USSD查询</span>
-                            <CheckboxCustom 
-                               checked={lockSettings.byPortIntercallUssd} 
-                               onChange={(v) => setLockSettings({...lockSettings, byPortIntercallUssd: v})} 
-                            />
-                         </div>
-                         <p className="text-xs font-bold text-slate-400">切换前发送USSD查询命令</p>
-                      </div>
-
-                      {/* 累计互打次数 */}
-                      <div className="flex items-center justify-between">
-                         <span className="text-sm font-bold text-slate-600">累计互打次数</span>
-                         <InputField 
-                            value={lockSettings.byPortIntercallCount} 
-                            onChange={(v) => setLockSettings({...lockSettings, byPortIntercallCount: parseInt(v) || 0})} 
-                         />
-                      </div>
-
-                      {/* 锁定时长(秒) */}
-                      <div className="flex flex-col gap-1.5">
-                         <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                               <span className="text-sm font-bold text-slate-600">锁定时长(秒)</span>
-                               <Info className="w-4 h-4 text-blue-500 cursor-help" fill="currentColor" />
-                            </div>
-                            <InputField 
-                               value={lockSettings.byPortIntercallLockTime} 
-                               onChange={(v) => setLockSettings({...lockSettings, byPortIntercallLockTime: parseInt(v) || 0})} 
-                            />
-                         </div>
-                         <p className="text-xs font-bold text-slate-400">0表示不锁，-1表示一直锁</p>
                       </div>
                    </div>
                 </div>
@@ -763,13 +384,125 @@ const CardSwitchPolicy: React.FC = () => {
           )}
 
           {activeTab === 'timeshare' && (
-            <div className="p-12 text-center text-slate-400">
-               <Sliders className="w-12 h-12 mx-auto mb-4 opacity-20" />
-               <p className="text-sm font-bold">分时策略正在加载中...</p>
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 flex flex-col h-full">
+               {/* 功能工具栏 */}
+               <div className="flex items-center gap-2 mb-8">
+                  <button onClick={openAddModal} className="flex items-center gap-2 px-6 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all shadow-sm group">
+                    <Plus className="w-4 h-4 text-slate-400 group-hover:text-primary-500" /> 新增
+                  </button>
+                  <button onClick={openEditModal} disabled={selectedRuleIds.length !== 1} className="flex items-center gap-2 px-6 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition-all shadow-sm group">
+                    <Edit3 className="w-4 h-4 text-slate-400 group-hover:text-primary-500" /> 编辑
+                  </button>
+                  <button onClick={handleDeleteRules} disabled={selectedRuleIds.length === 0} className="flex items-center gap-2 px-6 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:bg-rose-50 hover:text-rose-600 disabled:opacity-50 transition-all shadow-sm group">
+                    <Trash2 className="w-4 h-4 text-slate-400 group-hover:text-rose-500" /> 删除
+                  </button>
+               </div>
+
+               {/* 数据表格 */}
+               <div className="border border-slate-100 rounded-[2rem] overflow-hidden bg-white shadow-soft">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-slate-50/50 border-b border-slate-100">
+                        <th className="w-16 px-6 py-5">
+                           <CheckboxCustom 
+                            checked={selectedRuleIds.length === timeshareRules.length && timeshareRules.length > 0} 
+                            onChange={() => setSelectedRuleIds(selectedRuleIds.length === timeshareRules.length ? [] : timeshareRules.map(r => r.id))} 
+                           />
+                        </th>
+                        <th className="w-48 px-6 py-5 text-sm font-black text-slate-800 tracking-tight">时间段 (Start - End)</th>
+                        <th className="px-6 py-5 text-sm font-black text-slate-800 tracking-tight">SIM 集合激活状态 (T1M1 - T1M8)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {timeshareRules.map(rule => (
+                        <tr key={rule.id} className="hover:bg-slate-50/30 transition-colors group">
+                           <td className="px-6 py-5">
+                             <CheckboxCustom checked={selectedRuleIds.includes(rule.id)} onChange={() => handleToggleSelectRule(rule.id)} />
+                           </td>
+                           <td className="px-6 py-5">
+                              <div className="flex items-center gap-2">
+                                <span className="px-3 py-1.5 bg-slate-100 rounded-lg text-xs font-mono font-black text-slate-700">{rule.start}</span>
+                                <ArrowRight className="w-3 h-3 text-slate-300" />
+                                <span className="px-3 py-1.5 bg-slate-100 rounded-lg text-xs font-mono font-black text-slate-700">{rule.end}</span>
+                              </div>
+                           </td>
+                           <td className="px-6 py-5">
+                              <div className="flex flex-wrap items-center gap-2">
+                                 {rule.sims.map((checked, idx) => (
+                                   <div 
+                                      key={idx} 
+                                      className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-tight transition-all border ${
+                                        checked 
+                                          ? 'bg-primary-600 text-white border-primary-600 shadow-sm shadow-primary-500/20' 
+                                          : 'bg-slate-50 text-slate-300 border-slate-100'
+                                      }`}
+                                   >
+                                      M{idx+1}
+                                   </div>
+                                 ))}
+                              </div>
+                           </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+               </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* 编辑/新增弹窗 (PORTAL) */}
+      {isEditModalOpen && editingRule && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsEditModalOpen(false)}></div>
+            <div className="relative bg-white rounded-[2.5rem] shadow-2xl w-full max-w-2xl border border-white/60 animate-enter overflow-hidden flex flex-col">
+                <div className="px-10 py-6 border-b border-slate-100 bg-slate-50/50 flex-none flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className="p-3 bg-primary-50 text-primary-600 rounded-2xl">
+                            <Clock className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <h3 className="font-black text-slate-800 tracking-tight text-lg">配置分时策略</h3>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Scheduling SIM Set Management</p>
+                        </div>
+                    </div>
+                    <button onClick={() => setIsEditModalOpen(false)} className="p-2 rounded-xl hover:bg-slate-200/50 text-slate-400 transition-colors">
+                        <X className="w-6 h-6" />
+                    </button>
+                </div>
+                
+                <div className="p-10 space-y-10 overflow-y-auto max-h-[70vh]">
+                   <div className="grid grid-cols-2 gap-8">
+                      <div className="space-y-2.5">
+                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">开始时间</label>
+                         <input type="time" value={editingRule.start} onChange={(e) => setEditingRule({...editingRule, start: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-base font-mono font-black text-slate-700 outline-none focus:border-primary-500 transition-all shadow-inner" />
+                      </div>
+                      <div className="space-y-2.5">
+                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">结束时间</label>
+                         <input type="time" value={editingRule.end} onChange={(e) => setEditingRule({...editingRule, end: e.target.value})} className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-base font-mono font-black text-slate-700 outline-none focus:border-primary-500 transition-all shadow-inner" />
+                      </div>
+                   </div>
+                   <div className="space-y-4">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">SIM 集合勾选 (T1M1 - T1M8)</label>
+                      <div className="grid grid-cols-4 gap-4">
+                         {editingRule.sims.map((checked, idx) => (
+                           <label key={idx} className="flex items-center justify-between p-4 bg-slate-50/50 rounded-2xl border border-slate-100 cursor-pointer hover:bg-slate-100/50 transition-colors group">
+                              <span className="text-xs font-black text-slate-700 uppercase">T1M{idx+1}</span>
+                              <CheckboxCustom checked={checked} onChange={(v) => { const newSims = [...editingRule.sims]; newSims[idx] = v; setEditingRule({...editingRule, sims: newSims}); }} />
+                           </label>
+                         ))}
+                      </div>
+                   </div>
+                </div>
+                <div className="px-10 py-8 bg-slate-50 border-t border-slate-100 flex justify-end gap-4 flex-none">
+                    <button onClick={() => setIsEditModalOpen(false)} className="px-8 py-3 text-sm font-bold text-slate-500 hover:text-slate-700 transition-colors">取消</button>
+                    <button onClick={saveRule} className="btn-primary px-12 py-3 rounded-2xl text-sm font-black shadow-xl shadow-primary-500/20 active:scale-95 transition-all">保存配置</button>
+                </div>
+            </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };

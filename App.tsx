@@ -17,6 +17,17 @@ import SimStatus from './components/SimStatus';
 import SimSettings from './components/SimSettings';
 import SimBalance from './components/SimBalance';
 import CardSwitchPolicy from './components/CardSwitchPolicy';
+import AntiBlockPolicy from './components/AntiBlockPolicy';
+import SmsControlPolicy from './components/SmsControlPolicy';
+import SmsSend from './components/SmsSend';
+import SmsReceive from './components/SmsReceive';
+import SmsForwarding from './components/SmsForwarding';
+import SmsMmsManagement from './components/SmsMmsManagement';
+import SmsMmsFilter from './components/SmsMmsFilter';
+import ImfsSettings from './components/ImfsSettings';
+import SmsBusinessSettings from './components/SmsBusinessSettings';
+import SmsStatistics from './components/SmsStatistics';
+import InterSendStatistics from './components/InterSendStatistics';
 import { 
   Menu, 
   Bell, 
@@ -184,6 +195,17 @@ const App: React.FC = () => {
           <Route path="/sim/settings" element={<SimSettings />} />
           <Route path="/sim/balance" element={<SimBalance />} />
           <Route path="/policy/switch" element={<CardSwitchPolicy />} />
+          <Route path="/policy/antiblock" element={<AntiBlockPolicy />} />
+          <Route path="/policy/sms-control" element={<SmsControlPolicy />} />
+          <Route path="/sms/send" element={<SmsSend />} />
+          <Route path="/sms/receive" element={<SmsReceive />} />
+          <Route path="/sms/forward" element={<SmsForwarding />} />
+          <Route path="/sms/mms-send" element={<SmsMmsManagement />} />
+          <Route path="/sms/mms-filter" element={<SmsMmsFilter />} />
+          <Route path="/sms/imfs" element={<ImfsSettings />} />
+          <Route path="/sms/settings" element={<SmsBusinessSettings />} />
+          <Route path="/stats/sms" element={<SmsStatistics />} />
+          <Route path="/stats/inter" element={<InterSendStatistics />} />
           <Route path="/device/*" element={<Placeholder title="设备管理" />} />
           <Route path="/gateway/*" element={<Placeholder title="网关设置" />} />
           <Route path="/sim/*" element={<Placeholder title="SIM卡管理" />} />

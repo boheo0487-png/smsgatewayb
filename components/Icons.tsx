@@ -81,7 +81,12 @@ import {
   Circle,
   /* Adding missing HelpCircle and ArrowRight icons */
   HelpCircle,
-  ArrowRight
+  ArrowRight,
+  /* Adding missing Users and LayoutGrid icons */
+  Users,
+  LayoutGrid,
+  /* Adding missing Mail icon */
+  Mail
 } from 'lucide-react';
 
 export {
@@ -93,7 +98,7 @@ export {
   Bell, 
   Search, 
   Plus, 
-  MoreVertical,
+  MoreVertical, 
   CheckCircle2,
   AlertCircle,
   Clock,
@@ -165,5 +170,10 @@ export {
   Circle,
   /* Adding missing HelpCircle and ArrowRight icons */
   HelpCircle,
-  ArrowRight
+  ArrowRight,
+  /* Adding missing Users and LayoutGrid icons */
+  Users,
+  LayoutGrid,
+  /* Adding missing Mail icon */
+  Mail
 };

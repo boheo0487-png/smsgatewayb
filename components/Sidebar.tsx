@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
@@ -54,7 +55,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       path: '/gateway',
       submenu: [
         { name: '端口状态', path: '/gateway/status' },
-        { name: 'IMEI设置', path: '/gateway/imei' },
+        { name: 'IMEI设置', path: '/gateway/at' },
         { name: 'USSD指令', path: '/gateway/ussd' },
         { name: 'AT指令', path: '/gateway/at' },
       ]
@@ -87,8 +88,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
         { name: '发送短信', path: '/sms/send' },
         { name: '接收短信', path: '/sms/receive' },
         { name: '短信转发', path: '/sms/forward' },
-        { name: '发送彩信', path: '/sms/mms-send' },
-        { name: '彩信过滤', path: '/sms/mms-filter' },
+        { name: '彩信收发', path: '/sms/mms-send' },
+        { name: '短信过滤', path: '/sms/mms-filter' },
+        { name: 'IMFS', path: '/sms/imfs' },
         { name: '短信设置', path: '/sms/settings' },
       ]
     },
@@ -177,7 +179,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
                            <Link to={item.path} className={`flex-1 ${active ? 'font-bold' : ''}`} onClick={() => setIsOpen(false)}>{item.name}</Link>
                        )}
                        {hasSubmenu && (
-                         <ChevronRight className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-90' : ''} ${active ? 'text-primary-500' : 'text-slate-400'}`} />
+                         <ChevronRight className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-90' : ''} ${active ? 'text-primary-50' : 'text-slate-400'}`} />
                        )}
                     </div>
                   </div>
