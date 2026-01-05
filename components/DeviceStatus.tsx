@@ -65,7 +65,7 @@ const SectionCard: React.FC<{ title: string; icon: React.ElementType; color: str
 );
 
 const DeviceStatus: React.FC = () => {
-  const [deviceName, setDeviceName] = useState('Telarvo-Gateway-01');
+  const [deviceName, setDeviceName] = useState('演示设备');
   const [isEditingName, setIsEditingName] = useState(false);
   const [tempName, setTempName] = useState(deviceName);
   const inputRef = useRef<HTMLInputElement>(null);
