@@ -17,7 +17,8 @@ import {
   X,
   CheckCircle2,
   Lock,
-  Cpu
+  Cpu,
+  ShieldCheck
 } from './Icons';
 
 // --- UI Components ---
@@ -166,7 +167,7 @@ const GatewaySettings: React.FC = () => {
   return (
     <div className="max-w-[1400px] mx-auto space-y-6 animate-enter pb-12">
       
-      {/* Page Header - Consistent with other pages */}
+      {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-slate-200 pb-6">
         <div>
            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">网络设置</h1>
@@ -443,40 +444,50 @@ const GatewaySettings: React.FC = () => {
                         />
                     }
                 >
-                    <div className={`space-y-6 transition-opacity duration-200 ${!notifyConfig.enabled ? 'opacity-50 pointer-events-none' : ''}`}>
-                        <Field label="推送 URL" required>
-                            <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">POST</span>
-                                <Input 
-                                    className="pl-14" 
-                                    value={notifyConfig.url} 
-                                    onChange={(e) => setNotifyConfig({...notifyConfig, url: e.target.value})} 
-                                />
-                            </div>
-                        </Field>
-                        <Field label="推送间隔" help="最小间隔时间（秒）">
-                             <div className="flex items-center gap-3">
-                                 <Input type="number" className="w-24" value={notifyConfig.interval} />
-                                 <span className="text-sm text-slate-500">秒</span>
-                             </div>
-                        </Field>
-                        
-                        <div className="bg-slate-50 rounded-lg p-4 space-y-3 border border-slate-100">
-                            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">订阅事件</p>
-                            <label className="flex items-center gap-3 cursor-pointer">
-                                <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500" defaultChecked />
-                                <span className="text-sm text-slate-700">接收短信 (Incoming SMS)</span>
-                            </label>
-                            <label className="flex items-center gap-3 cursor-pointer">
-                                <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500" defaultChecked />
-                                <span className="text-sm text-slate-700">发送状态报告 (Delivery Report)</span>
-                            </label>
-                            <label className="flex items-center gap-3 cursor-pointer">
-                                <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500" />
-                                <span className="text-sm text-slate-700">接收彩信 (Incoming MMS)</span>
-                            </label>
-                        </div>
-                    </div>
+                    {notifyConfig.enabled ? (
+                      <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
+                          <Field label="推送 URL" required>
+                              <div className="relative">
+                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">POST</span>
+                                  <Input 
+                                      className="pl-14" 
+                                      value={notifyConfig.url} 
+                                      onChange={(e) => setNotifyConfig({...notifyConfig, url: e.target.value})} 
+                                  />
+                              </div>
+                          </Field>
+                          <Field label="推送间隔" help="最小间隔时间（秒）">
+                               <div className="flex items-center gap-3">
+                                   <Input type="number" className="w-24" value={notifyConfig.interval} />
+                                   <span className="text-sm text-slate-500">秒</span>
+                               </div>
+                          </Field>
+                          
+                          <div className="bg-slate-50 rounded-lg p-4 space-y-3 border border-slate-100">
+                              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">订阅事件</p>
+                              <label className="flex items-center gap-3 cursor-pointer">
+                                  <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500" defaultChecked />
+                                  <span className="text-sm text-slate-700">接收短信 (Incoming SMS)</span>
+                              </label>
+                              <label className="flex items-center gap-3 cursor-pointer">
+                                  <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500" defaultChecked />
+                                  <span className="text-sm text-slate-700">发送状态报告 (Delivery Report)</span>
+                              </label>
+                              <label className="flex items-center gap-3 cursor-pointer">
+                                  <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500" />
+                                  <span className="text-sm text-slate-700">接收彩信 (Incoming MMS)</span>
+                              </label>
+                          </div>
+                      </div>
+                    ) : (
+                      <div className="py-10 flex flex-col items-center justify-center text-center opacity-40 select-none animate-in fade-in duration-500">
+                          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4 shadow-inner border border-slate-200">
+                             <ShieldCheck className="w-8 h-8 text-slate-300" />
+                          </div>
+                          <h4 className="text-sm font-black text-slate-400 uppercase tracking-widest">服务未激活</h4>
+                          <p className="text-xs font-bold mt-1 max-w-[200px] text-slate-400">请开启上方开关以配置事件推送参数</p>
+                      </div>
+                    )}
                 </SettingsCard>
 
                 <SettingsCard 

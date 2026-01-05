@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Server, 
   Globe, 
@@ -6,6 +7,9 @@ import {
   CheckCircle2, 
   Activity, 
   Barcode, 
+  Edit3,
+  Check,
+  X
 } from './Icons';
 
 interface InfoRowProps {
@@ -17,7 +21,7 @@ interface InfoRowProps {
 const InfoRow: React.FC<InfoRowProps> = ({ label, value, isLast = false }) => (
   <div className={`flex flex-col sm:flex-row sm:items-center justify-between py-3.5 ${!isLast ? 'border-b border-slate-100' : ''} group hover:bg-slate-50/50 px-2 -mx-2 rounded-lg transition-colors`}>
     <span className="text-xs font-bold text-slate-500 mb-1 sm:mb-0 uppercase tracking-wide group-hover:text-slate-600 transition-colors">{label}</span>
-    <div className="text-sm font-medium text-slate-800 text-right font-mono">{value}</div>
+    <div className="text-sm font-medium text-slate-800 text-right font-mono flex items-center justify-end">{value}</div>
   </div>
 );
 
@@ -61,6 +65,35 @@ const SectionCard: React.FC<{ title: string; icon: React.ElementType; color: str
 );
 
 const DeviceStatus: React.FC = () => {
+  const [deviceName, setDeviceName] = useState('Telarvo-Gateway-01');
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [tempName, setTempName] = useState(deviceName);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditingName && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditingName]);
+
+  const handleSaveName = () => {
+    if (tempName.trim()) {
+      setDeviceName(tempName.trim());
+    } else {
+      setTempName(deviceName);
+    }
+    setIsEditingName(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') handleSaveName();
+    if (e.key === 'Escape') {
+      setTempName(deviceName);
+      setIsEditingName(false);
+    }
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1200px] mx-auto">
       <div className="flex items-end justify-between mb-2">
@@ -75,11 +108,36 @@ const DeviceStatus: React.FC = () => {
 
       <SectionCard title="系统状态" icon={Server} color="text-primary-600">
            <div className="flex flex-col">
+              <InfoRow 
+                label="设备名称" 
+                value={
+                  isEditingName ? (
+                    <div className="flex items-center gap-1 w-full max-w-[200px]">
+                      <input 
+                        ref={inputRef}
+                        type="text" 
+                        value={tempName}
+                        onChange={(e) => setTempName(e.target.value)}
+                        onBlur={handleSaveName}
+                        onKeyDown={handleKeyDown}
+                        className="w-full px-2 py-1 bg-white border border-primary-500 rounded text-sm font-bold text-slate-800 outline-none shadow-sm"
+                      />
+                    </div>
+                  ) : (
+                    <div 
+                      onClick={() => setIsEditingName(true)}
+                      className="group/name flex items-center gap-2 cursor-pointer hover:text-primary-600 transition-colors"
+                    >
+                      <span className="font-bold underline decoration-dotted decoration-slate-300 group-hover/name:decoration-primary-300 underline-offset-4">{deviceName}</span>
+                      <Edit3 className="w-3.5 h-3.5 opacity-0 group-hover/name:opacity-100 transition-opacity text-slate-400" />
+                    </div>
+                  )
+                } 
+              />
               <InfoRow label="设备ID" value="0C5E1A82" />
               <InfoRow label="MAC地址" value="e2:08:0c:5e:1a:82" />
               <InfoRow label="固件版本" value="20251126" />
               <InfoRow label="网关状态" value={<StatusBadge type="success" text="已连接" />} />
-              <InfoRow label="系统时间" value="2025-11-28 11:01:03" />
               <InfoRow label="运行时长" value={<span className="text-primary-600 font-bold">1天 23小时 22分</span>} isLast={true} />
            </div>
            <div className="flex flex-col">
@@ -95,6 +153,7 @@ const DeviceStatus: React.FC = () => {
               <InfoRow label="设备型号" value="EG91NAXGA" />
               <InfoRow label="软件版本" value="1.34.26691" />
               <InfoRow label="文件系统" value={<StatusBadge type="success" text="已连接" />} />
+              <InfoRow label="系统时间" value="2025-11-28 11:01:03" />
               <InfoRow label="时区" value="+08:00" isLast={true} />
            </div>
       </SectionCard>

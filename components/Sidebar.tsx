@@ -210,14 +210,6 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
               );
             })}
           </nav>
-
-          {/* Bottom Actions */}
-          <div className="p-4 border-t border-white/30 bg-white/20">
-             <button className="flex items-center w-full px-4 py-2.5 text-sm font-medium text-slate-600 rounded-lg hover:bg-white/50 hover:text-rose-600 transition-all group border border-transparent hover:border-white/40 hover:shadow-sm">
-                <LogOut className="w-4 h-4 mr-3 text-slate-400 group-hover:text-rose-500 transition-colors" strokeWidth={1.5} />
-                退出登录
-             </button>
-          </div>
         </div>
       </aside>
     </>

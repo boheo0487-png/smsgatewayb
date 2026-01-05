@@ -2,7 +2,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import StatCard from './StatCard';
-import { VolumeChart } from './Charts';
 import { 
   Send, 
   CheckCircle2, 
@@ -13,11 +12,10 @@ import {
   Activity,
   Globe,
   Shield,
-  BarChart3,
   MessageSquare,
-  Zap,
-  Clock,
-  Cpu
+  Cpu,
+  LayoutGrid,
+  Info
 } from './Icons';
 
 interface SmsStat {
@@ -48,12 +46,12 @@ const Dashboard: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
            <h1 className="text-3xl font-black text-slate-900 tracking-tight">系统概览</h1>
-           <div className="flex items-center gap-3 mt-2 px-4 py-1.5 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-100 w-fit">
-             <span className="relative flex h-2.5 w-2.5">
+           <div className="flex items-center gap-3 mt-2 px-4 py-1.5 bg-emerald-50/80 text-emerald-700 rounded-full border border-emerald-100 w-fit">
+             <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
              </span>
-             <p className="text-xs font-bold uppercase tracking-wider">Telarvo 网关在线 - 运行中</p>
+             <p className="text-[10px] font-black uppercase tracking-[0.2em]">Telarvo 网关在线 - 运行中</p>
            </div>
         </div>
         <div className="flex gap-3">
@@ -72,82 +70,133 @@ const Dashboard: React.FC = () => {
         <StatCard title="可用端口" value="12/16" trend="neutral" icon={Cable} />
       </div>
 
-      {/* 实时趋势与资源监控 */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-          {/* 发送趋势图 */}
-          <div className="xl:col-span-2 glass-card rounded-[2rem] p-8 border border-white/60 shadow-soft bg-white/40">
-              <div className="flex items-center justify-between mb-8">
-                  <div className="flex items-center gap-4">
-                      <div className="p-3 bg-primary-50 text-primary-600 rounded-2xl">
-                          <BarChart3 className="w-6 h-6" />
-                      </div>
-                      <div>
-                          <h3 className="text-lg font-black text-slate-800 tracking-tight">流量实时监控</h3>
-                          <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-0.5">SMS Traffic Analysis</p>
-                      </div>
-                  </div>
-                  <div className="flex gap-2">
-                      <span className="px-3 py-1 bg-primary-50 text-primary-700 text-[10px] font-black rounded-lg">LIVE</span>
-                  </div>
+      {/* 设备信息概括 */}
+      <div className="glass-card bg-white rounded-[2rem] border border-white/60 shadow-soft overflow-hidden">
+        {/* 卡片头部 */}
+        <div className="px-8 py-6 border-b border-slate-50 flex items-center justify-between">
+           <div className="flex items-center gap-4">
+              <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl">
+                 <LayoutGrid className="w-5 h-5" />
               </div>
-              <VolumeChart />
-          </div>
-
-          {/* 设备关键状态 */}
-          <div className="glass-card rounded-[2rem] p-8 border border-white/60 shadow-soft bg-slate-900 text-white relative overflow-hidden group">
-              <div className="absolute -top-12 -right-12 p-10 opacity-10 group-hover:rotate-12 transition-transform duration-700">
-                  <Cpu className="w-48 h-48" />
+              <div>
+                 <h2 className="text-base font-black text-slate-800 tracking-tight">设备信息概括</h2>
+                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">实时监控数据</p>
               </div>
-              <div className="relative z-10 space-y-8">
-                  <div className="flex items-center gap-4">
-                      <div className="p-3 bg-white/10 rounded-2xl border border-white/10">
-                          <Server className="w-6 h-6 text-primary-400" />
-                      </div>
-                      <h3 className="text-lg font-black tracking-tight">硬件健康度</h3>
-                  </div>
+           </div>
+           <Link to="/device/status" className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 text-xs font-black rounded-xl hover:bg-indigo-100 transition-all group">
+              查看设备详情 <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+           </Link>
+        </div>
 
-                  <div className="space-y-6">
-                      <div className="space-y-2">
-                          <div className="flex justify-between text-xs font-black text-slate-400 uppercase tracking-widest">
-                              <span>CPU 负载</span>
-                              <span className="text-indigo-400">32%</span>
-                          </div>
-                          <div className="h-2 bg-white/10 rounded-full overflow-hidden shadow-inner">
-                              <div className="h-full bg-indigo-500 rounded-full" style={{ width: '32%' }}></div>
-                          </div>
-                      </div>
-                      <div className="space-y-2">
-                          <div className="flex justify-between text-xs font-black text-slate-400 uppercase tracking-widest">
-                              <span>内存占用</span>
-                              <span className="text-emerald-400">48%</span>
-                          </div>
-                          <div className="h-2 bg-white/10 rounded-full overflow-hidden shadow-inner">
-                              <div className="h-full bg-emerald-500 rounded-full" style={{ width: '48%' }}></div>
-                          </div>
-                      </div>
-                      <div className="space-y-2">
-                          <div className="flex justify-between text-xs font-black text-slate-400 uppercase tracking-widest">
-                              <span>存储空间</span>
-                              <span className="text-amber-400">75%</span>
-                          </div>
-                          <div className="h-2 bg-white/10 rounded-full overflow-hidden shadow-inner">
-                              <div className="h-full bg-amber-500 rounded-full" style={{ width: '75%' }}></div>
-                          </div>
-                      </div>
-                  </div>
-
-                  <div className="pt-4 border-t border-white/10">
-                      <div className="flex items-center justify-between text-sm font-bold">
-                          <span className="text-slate-400">运行时长</span>
-                          <span className="font-mono">15d 04h 22m</span>
-                      </div>
-                  </div>
+        {/* 内容主体 - 四列布局 */}
+        <div className="grid grid-cols-1 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-slate-50">
+           
+           {/* 第一列：设备视觉标识 */}
+           <div className="p-10 flex flex-col items-center justify-center space-y-6">
+              <div className="relative">
+                 <div className="w-28 h-28 bg-white rounded-3xl border-2 border-slate-50 shadow-soft flex items-center justify-center">
+                    <Server className="w-12 h-12 text-indigo-500" strokeWidth={1.5} />
+                 </div>
+                 <div className="absolute -bottom-2 right-1/2 translate-x-1/2 px-3 py-1 bg-emerald-500 text-white text-[10px] font-black rounded-lg shadow-lg border-2 border-white uppercase tracking-tighter">
+                    在线
+                 </div>
               </div>
-          </div>
+              <div className="text-center">
+                 <h3 className="text-xl font-black text-slate-800 tracking-tight">演示设备</h3>
+                 <div className="mt-2 px-3 py-1.5 bg-slate-50 text-slate-400 text-[10px] font-mono font-bold rounded-lg border border-slate-100 uppercase">
+                    ID: DEV-2024-X88
+                 </div>
+              </div>
+           </div>
+
+           {/* 第二列：系统状态 */}
+           <div className="p-10 space-y-8">
+              <div className="flex items-center gap-3">
+                 <div className="p-2 bg-indigo-50 text-indigo-500 rounded-xl">
+                    <Activity className="w-4 h-4" />
+                 </div>
+                 <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">系统状态</h4>
+              </div>
+              
+              <div className="space-y-6">
+                 <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-slate-500">网关状态</span>
+                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>
+                 </div>
+                 <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-slate-500">文件系统</span>
+                    <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] font-black rounded-md border border-emerald-100 uppercase">已连接</span>
+                 </div>
+                 <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-slate-500">运行时长</span>
+                    <span className="text-sm font-mono font-black text-slate-800">15天 04时 22分</span>
+                 </div>
+              </div>
+           </div>
+
+           {/* 第三列：网络状态 */}
+           <div className="p-10 space-y-8">
+              <div className="flex items-center gap-3">
+                 <div className="p-2 bg-cyan-50 text-cyan-500 rounded-xl">
+                    <Globe className="w-4 h-4" />
+                 </div>
+                 <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">网络状态</h4>
+              </div>
+
+              <div className="space-y-6">
+                 <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-slate-500">WAN口速率</span>
+                    <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-mono font-black rounded-md">1 Gbps</span>
+                 </div>
+                 <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-slate-500">IP地址</span>
+                    <span className="text-sm font-mono font-black text-slate-800">192.168.0.74</span>
+                 </div>
+                 <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-slate-500">网关地址</span>
+                    <span className="text-sm font-mono font-black text-slate-800">192.168.0.1</span>
+                 </div>
+              </div>
+           </div>
+
+           {/* 第四列：授权信息 */}
+           <div className="p-10 space-y-8">
+              <div className="flex items-center gap-3">
+                 <div className="p-2 bg-amber-50 text-amber-500 rounded-xl">
+                    <Shield className="w-4 h-4" />
+                 </div>
+                 <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">授权信息</h4>
+              </div>
+
+              <div className="space-y-6">
+                 <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-slate-500">版本</span>
+                    <span className="text-sm font-black text-slate-800">PRO_V2</span>
+                 </div>
+                 <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-slate-500">有效期</span>
+                    <div className="flex items-baseline gap-1.5">
+                       <span className="text-xl font-mono font-black text-amber-600">342</span>
+                       <span className="text-[10px] font-black text-amber-500 uppercase tracking-tighter">天</span>
+                    </div>
+                 </div>
+                 <div className="space-y-2">
+                    <div className="flex justify-between text-[10px] font-black text-slate-300 uppercase tracking-widest">
+                       <span>使用率</span>
+                       <span className="text-slate-400">75%</span>
+                    </div>
+                    <div className="h-2 w-full bg-slate-50 rounded-full overflow-hidden shadow-inner border border-slate-100">
+                       <div className="h-full bg-amber-500 rounded-full" style={{ width: '75%' }}></div>
+                    </div>
+                 </div>
+              </div>
+           </div>
+
+        </div>
       </div>
 
       {/* 业务细节表格 */}
-      <div className="glass-card rounded-[2rem] overflow-hidden shadow-soft border border-white/60 bg-white/60">
+      <div className="glass-card rounded-[2.5rem] overflow-hidden shadow-soft border border-white/60 bg-white/60">
          <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-white/40">
             <div className="flex items-center gap-4">
                 <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl">
@@ -155,7 +204,7 @@ const Dashboard: React.FC = () => {
                 </div>
                 <div>
                     <h3 className="text-lg font-black text-slate-800 tracking-tight">终端业务详情</h3>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Terminal SMS Performance</p>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Terminal Performance Monitor</p>
                 </div>
             </div>
             <Link to="/stats/sms" className="flex items-center gap-2 text-xs font-black text-primary-600 hover:text-primary-700 transition-colors uppercase tracking-widest">

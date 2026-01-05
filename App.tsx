@@ -106,6 +106,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             {/* Control Panel Indicators - Clean Badges */}
             <div className="hidden xl:flex items-center gap-3 mr-2">
                 {[
+                  { label: '短信', val: '1,245k', icon: MessageSquare, color: 'text-indigo-500', bg: 'hover:bg-indigo-50' },
                   { label: '告警', val: '2', icon: Bell, color: 'text-rose-500', bg: 'hover:bg-rose-50' },
                   { label: '端口', val: '12/16', icon: Cable, color: 'text-slate-500', bg: 'hover:bg-slate-50' },
                   { label: 'SIM卡', val: '3/8', icon: CreditCard, color: 'text-slate-500', bg: 'hover:bg-slate-50' },
